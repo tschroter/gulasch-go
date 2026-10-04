@@ -103,10 +103,10 @@ export class Game {
     this.phase = "racing";
     this.outcome = null;
     this.ui.hide();
-    // Fair but beatable: player has a slight head start; rival sticks to the racing line.
-    this.rivalBaseSpeed = 11.5 + Math.random() * 1.5;
-    this.player.reset(0.03, 1.15);
-    this.rival.reset(0.01, -1.15);
+    // Fair but beatable: player head start; rival slower than a clean WASD run.
+    this.rivalBaseSpeed = 9.2 + Math.random() * 0.8;
+    this.player.reset(0.04, 1.15);
+    this.rival.reset(0.005, -1.15);
     this.chase.reset(this.player);
   }
 

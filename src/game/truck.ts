@@ -89,7 +89,7 @@ export class Truck {
     this.mesh.position.x += dirX * this.speed * dt;
     this.mesh.position.z += dirZ * this.speed * dt;
 
-    this.constrainToRoad();
+    this.constrainToRoad(dt);
     this.mesh.rotation.y = this.heading;
     // Mild body lean while turning.
     this.mesh.rotation.z = THREE.MathUtils.damp(
@@ -131,19 +131,23 @@ export class Truck {
     }
   }
 
-  private constrainToRoad(): void {
+  private constrainToRoad(dt: number): void {
     const t = this.track.nearestT(this.mesh.position);
     const sample = this.track.sample(t);
     this.tmp.subVectors(this.mesh.position, sample.position);
     let lateral = this.tmp.dot(sample.binormal);
+    const roadHeading = Math.atan2(sample.tangent.x, sample.tangent.z);
 
     if (Math.abs(lateral) > LATERAL_SOFT) {
       const overshoot = Math.abs(lateral) - LATERAL_SOFT;
       lateral = Math.sign(lateral) * LATERAL_SOFT;
-      this.speed *= 1 - Math.min(0.55, overshoot * 0.35);
-      // Nudge heading back toward road.
-      const roadHeading = Math.atan2(sample.tangent.x, sample.tangent.z);
-      this.heading = THREE.MathUtils.lerp(this.heading, roadHeading, 0.12);
+      // Soft scrub — keep the truck playable through curves.
+      this.speed *= 1 - Math.min(0.25, overshoot * 0.12);
+      this.heading = THREE.MathUtils.lerp(this.heading, roadHeading, 0.2);
+    } else if (this.speed > 4) {
+      // Arcade assist: ease heading toward the road when roughly on-track.
+      const blend = 1 - Math.exp(-1.8 * dt);
+      this.heading = THREE.MathUtils.lerp(this.heading, roadHeading, blend * 0.35);
     }
 
     this.mesh.position

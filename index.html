@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GulaschGo — game-basis</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+      <div id="hud">
+        <div class="brand">GulaschGo</div>
+        <div class="hint">WASD · R restart / Neustart</div>
+      </div>
+      <div id="result" class="hidden" aria-live="polite">
+        <div class="result-panel">
+          <h1 id="result-title"></h1>
+          <p id="result-de"></p>
+          <p id="result-en"></p>
+          <p class="result-hint">R — restart / Neustart</p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

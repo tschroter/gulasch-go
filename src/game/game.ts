@@ -24,13 +24,14 @@ export type DebugSnapshot = {
   rivalZ: number;
   playerX: number;
   speed: number;
+  finishZ: number;
+  totalLength: number;
   /** Rolling average frame time ms (dev/smoke aid). */
   frameMs: number;
 };
 
 const FB_W = 320;
 const FB_H = 200;
-const FINISH_Z_RATIO = 0.92;
 /** Cap display buffer scale — avoids full-window×DPR blits. */
 const MAX_SCALE = 3;
 
@@ -75,10 +76,12 @@ export class Game {
     this.fbCtx = fbCtx;
     this.fbCtx.imageSmoothingEnabled = false;
 
-    this.segments = buildTrack();
+    const built = buildTrack();
+    this.segments = built.segments;
     this.segCount = this.segments.length;
     this.totalLength = trackLength(this.segments);
-    this.finishZ = this.totalLength * FINISH_Z_RATIO;
+    // Win/lose only at the delivery gate sprite — not a mid-course ratio.
+    this.finishZ = built.finishZ;
     this.resetRace();
   }
 
@@ -114,6 +117,8 @@ export class Game {
       rivalZ: this.rivalZ,
       playerX: this.playerX,
       speed: this.speed,
+      finishZ: this.finishZ,
+      totalLength: this.totalLength,
       frameMs: this.frameMs,
     };
   }

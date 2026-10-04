@@ -69,7 +69,14 @@ export const TRACK: TrackConfig = {
   centrifugal: 0.22,
 };
 
-export function buildTrack(): Segment[] {
+export type BuiltTrack = {
+  segments: Segment[];
+  /** World Z of the delivery finish gate (win/lose line). */
+  finishZ: number;
+  finishIndex: number;
+};
+
+export function buildTrack(): BuiltTrack {
   const segments: Segment[] = [];
   const add = (n: number, curve = 0): void => {
     for (let i = 0; i < n; i++) {
@@ -125,7 +132,11 @@ export function buildTrack(): Segment[] {
     lane: "#c45c26",
   };
 
-  return segments;
+  return {
+    segments,
+    finishIndex,
+    finishZ: segments[finishIndex].z,
+  };
 }
 
 export function trackLength(segments: Segment[]): number {

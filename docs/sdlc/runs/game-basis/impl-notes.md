@@ -58,11 +58,19 @@ Feedback: game lagged badly (poor frame rate / stutter).
 4. **Sprite path** — no per-sprite `save()/restore()/translate()`.
 5. **Debug** — `getDebugSnapshot().frameMs` EMA for local checks.
 
-Headless sample while racing: ~16.7ms/frame (~60fps). Smoke still OK.
+Headless sample while racing: ~16.7ms/frame (~60fps).
+
+### Review follow-up (2026-10-04) — early win blocker
+
+Review `request-changes`: win used `FINISH_Z_RATIO = 0.92` while gate is at `segments.length - 10` (~99%) → ~76 segments early.
+
+**Fix:** `buildTrack()` returns gate `finishZ`; `Game` ends only there. Smoke asserts finish near end (`finishZ/totalLength > 0.97`) and finisher Z ≥ `finishZ`.
+
+Post-fix smoke: lose ~30.2s / win ~17.3s at `finishZ=213000` of `215000`.
 
 ## Leftover / follow-ups
 
-- Human local feel + rival visibility + FPS re-check
+- Short human confirm win/lose at delivery gate
 - Multi-level progression, combat, economy — out of scope
 - Optional scanline overlay if a later visual pass wants more CRT
 - Arrow keys / gamepad — out of scope

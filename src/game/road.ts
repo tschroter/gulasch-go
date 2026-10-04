@@ -91,14 +91,14 @@ export function buildTrack(): Segment[] {
   };
 
   // Short curved delivery route — visible bends the player must steer through.
-  add(28, 0);
-  add(22, 3.2);
-  add(18, 0);
-  add(26, -4.0);
-  add(16, 0);
-  add(24, 3.6);
-  add(20, -2.8);
-  add(30, 0);
+  add(36, 0);
+  add(28, 3.2);
+  add(22, 0);
+  add(32, -4.0);
+  add(20, 0);
+  add(30, 3.6);
+  add(26, -2.8);
+  add(40, 0);
 
   // Roadside props + finish gate near the end.
   for (let i = 8; i < segments.length - 12; i += 6) {

@@ -161,8 +161,8 @@ export class Game {
     this.playerZ += this.speed * dt * 60;
     this.steerLean += ((keys.left ? -1 : 0) + (keys.right ? 1 : 0) - this.steerLean) * Math.min(1, dt * 12);
 
-    // Rival: steady advance, mild weave; beatable with clean W.
-    const rivalSpeed = TRACK.maxSpeed * 0.62;
+    // Rival: steady advance, mild weave; beatable with clean W (~10s solo).
+    const rivalSpeed = TRACK.maxSpeed * 0.48;
     this.rivalZ += rivalSpeed * dt * 60;
     this.rivalX = 0.18 + Math.sin(this.rivalZ * 0.0022) * 0.35;
 

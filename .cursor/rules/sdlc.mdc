@@ -1,0 +1,16 @@
+---
+description: Enforce GulaschGo SDLC human gate and phase order when /sdlc or phase agents run.
+alwaysApply: false
+---
+
+# GulaschGo SDLC gate
+
+When working on a `/sdlc` loop or when plan / implement / test / review agents are in play:
+
+- Order is **plan → human gate → implement → test → review**.
+- After planning, **stop** until a human explicitly approves the plan.
+- Do not implement, test, or review a slice whose plan is not `approved`.
+- Keep slices thin and PS1-era low-poly browser-game scoped.
+- Write handoffs using `docs/sdlc/templates/` into the active run directory.
+
+Canonical Project doc: Project store `docs/sdlc.md` (when available). Repo overview: `docs/sdlc/README.md`.

@@ -15,9 +15,9 @@ export const PLAYER_TRUCK: TruckPalette = {
 };
 
 export const RIVAL_TRUCK: TruckPalette = {
-  cab: PALETTE.rivalCab,
-  body: PALETTE.rivalBody,
-  accent: PALETTE.rivalAccent,
+  cab: "#c02818",
+  body: "#f05040",
+  accent: "#ffe060",
   skin: PALETTE.rivalSkin,
 };
 

@@ -110,8 +110,9 @@ export class Game {
     this.playerX = 0;
     this.playerZ = 0;
     this.speed = 0;
-    this.rivalZ = TRACK.segmentLength * 2;
-    this.rivalX = 0.18;
+    // Start rival ahead on the visible road (not under/behind the camera).
+    this.rivalZ = TRACK.segmentLength * 28;
+    this.rivalX = 0.22;
     this.phase = "racing";
     this.outcome = null;
     this.elapsed = 0;
@@ -161,10 +162,10 @@ export class Game {
     this.playerZ += this.speed * dt * 60;
     this.steerLean += ((keys.left ? -1 : 0) + (keys.right ? 1 : 0) - this.steerLean) * Math.min(1, dt * 12);
 
-    // Rival: steady advance, mild weave; beatable with clean W (~10s solo).
-    const rivalSpeed = TRACK.maxSpeed * 0.48;
+    // Rival: steady advance, mild weave; beatable with clean hold-W on the longer course.
+    const rivalSpeed = TRACK.maxSpeed * 0.52;
     this.rivalZ += rivalSpeed * dt * 60;
-    this.rivalX = 0.18 + Math.sin(this.rivalZ * 0.0022) * 0.35;
+    this.rivalX = 0.22 + Math.sin(this.rivalZ * 0.0016) * 0.28;
 
     this.checkFinish();
   }
@@ -239,8 +240,9 @@ export class Game {
       maxY = segment.p2.screen.y;
     }
 
-    // Sprites (near → far for painter order on props; draw after road strips).
+    // Sprites (far → near so nearer props/rival paint on top).
     this.drawSprites(base);
+    this.drawRival(base);
 
     // Player truck fixed near bottom-center.
     drawTruck(ctx, FB_W / 2, FB_H - 18, 28, PLAYER_TRUCK, this.steerLean);
@@ -275,32 +277,39 @@ export class Game {
     const ctx = this.fbCtx;
     for (let n = TRACK.drawDistance - 1; n > 0; n--) {
       const segment = this.segments[(base.index + n) % this.segments.length];
-      const scale = segment.p1.scale;
-      if (scale <= 0 || segment.p1.camera.z <= TRACK.cameraDepth) continue;
+      if (segment.p1.scale <= 0 || segment.p1.camera.z <= TRACK.cameraDepth) continue;
+      if (segment.p1.screen.y < 0 || segment.p1.screen.y > FB_H) continue;
 
+      const roadHalf = Math.max(4, segment.p1.screen.w);
       for (const sprite of segment.sprites) {
-        const spriteScale = (scale * FB_W) / 2;
-        const spriteX =
-          segment.p1.screen.x +
-          scale * sprite.offset * TRACK.roadWidth * (FB_W / 2);
+        const spriteScale = roadHalf * (sprite.kind === "finish" ? 0.85 : 0.4);
+        const spriteX = segment.p1.screen.x + sprite.offset * roadHalf;
         const spriteY = segment.p1.screen.y;
-        if (sprite.kind === "finish") {
-          drawProp(ctx, "finish", spriteX, spriteY, spriteScale * 0.9);
-        } else {
-          drawProp(ctx, sprite.kind, spriteX, spriteY, spriteScale * 0.55);
-        }
-      }
-
-      // Rival on this segment
-      const rivalSeg = findSegment(this.segments, this.rivalZ);
-      if (rivalSeg.index === segment.index) {
-        const spriteScale = Math.max(4, (scale * FB_W) / 2.4);
-        const spriteX =
-          segment.p1.screen.x +
-          scale * this.rivalX * TRACK.roadWidth * (FB_W / 2);
-        drawTruck(ctx, spriteX, segment.p1.screen.y, spriteScale, RIVAL_TRUCK, 0);
+        drawProp(ctx, sprite.kind, spriteX, spriteY, spriteScale);
       }
     }
+  }
+
+  /** Draw rival sized as a fraction of road width so it stays readable ahead. */
+  private drawRival(base: Segment): void {
+    if (this.rivalZ <= this.playerZ) return;
+
+    const rivalSeg = findSegment(this.segments, this.rivalZ);
+    let n = rivalSeg.index - base.index;
+    if (n < 0) n += this.segments.length;
+    if (n <= 0 || n >= TRACK.drawDistance) return;
+
+    const segment = this.segments[(base.index + n) % this.segments.length];
+    if (segment.p1.camera.z <= TRACK.cameraDepth) return;
+
+    const roadHalf = segment.p1.screen.w;
+    const spriteY = segment.p1.screen.y;
+    if (roadHalf < 3 || spriteY < 8 || spriteY > FB_H - 4) return;
+
+    // ~half road half-width ≈ clearly truck-sized vs road; floor keeps far rival readable.
+    const spriteScale = Math.max(10, Math.min(48, roadHalf * 0.55));
+    const spriteX = segment.p1.screen.x + this.rivalX * roadHalf;
+    drawTruck(this.fbCtx, spriteX, spriteY, spriteScale, RIVAL_TRUCK, 0);
   }
 
   private polygon(

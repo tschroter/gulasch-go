@@ -19,7 +19,7 @@ const solo = await page.waitForFunction(
     const s = window.__gulasch.getDebugSnapshot();
     return s.phase === "result" ? s : null;
   },
-  { timeout: 45000 },
+  { timeout: 120000 },
 );
 const soloSnap = await solo.jsonValue();
 console.log("rival_solo", soloSnap);
@@ -33,7 +33,7 @@ const raced = await page.waitForFunction(
     const s = window.__gulasch.getDebugSnapshot();
     return s.phase === "result" ? s : null;
   },
-  { timeout: 45000 },
+  { timeout: 120000 },
 );
 await page.keyboard.up("w");
 const raceSnap = await raced.jsonValue();
@@ -45,12 +45,19 @@ if (soloSnap.outcome !== "lose") {
   console.error("FAIL: rival solo should lose for player");
   process.exit(1);
 }
-if (soloSnap.elapsed < 6) {
+if (soloSnap.elapsed < 18) {
   console.error("FAIL: rival solo finished too fast", soloSnap.elapsed);
   process.exit(1);
 }
 if (raceSnap.outcome !== "win") {
   console.error("FAIL: holding W should win", raceSnap);
+  process.exit(1);
+}
+if (raceSnap.elapsed >= soloSnap.elapsed) {
+  console.error("FAIL: player hold-W should finish faster than rival solo", {
+    raceSnap,
+    soloSnap,
+  });
   process.exit(1);
 }
 console.log("OK");

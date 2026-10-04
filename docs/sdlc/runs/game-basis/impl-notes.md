@@ -8,14 +8,14 @@
 
 ## Summary
 
-Greenfield Vite + TypeScript + **Canvas 2D** app that boots a short **curved** delivery race in **pseudo-3D Atari / Pole Position–style**: chubby procedural trucker sprites, light arcade WASD, one distinct rival AI, 320×200 nearest-neighbor upscale with a limited flat palette, bilingual DE/EN finish overlay, restart with **R**. No Three.js.
+Greenfield Vite + TypeScript + **Canvas 2D** app that boots a **curved** delivery race in **pseudo-3D Atari / Pole Position–style**: chubby procedural trucker sprites, light arcade WASD, one distinct rival AI, 320×200 nearest-neighbor upscale with a limited flat palette, bilingual DE/EN finish overlay, restart with **R**. No Three.js.
 
 ## Files touched
 
 - `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.ts` — Vite/TS toolchain (**no** `three`)
 - `index.html`, `src/main.ts`, `src/style.css`, `src/vite-env.d.ts` — app shell + HUD/result markup
-- `src/game/game.ts` — race loop, framebuffer upscale, win/lose, debug snapshot
-- `src/game/road.ts` — segment track + pseudo-3D projection helpers
+- `src/game/game.ts` — race loop, framebuffer upscale, win/lose, rival draw, debug snapshot
+- `src/game/road.ts` — longer segment track + pseudo-3D projection helpers
 - `src/game/sprites.ts` — chubby player/rival trucks + roadside props
 - `src/game/palette.ts` — limited Atari-like colors
 - `src/game/input.ts` — WASD + R
@@ -36,12 +36,19 @@ Greenfield Vite + TypeScript + **Canvas 2D** app that boots a short **curved** d
 ## Playtest notes (implement)
 
 - Steer uses high `steerSpeed` and near-immediate A/D response; centrifugal curve pull is mild — **human-local feel** remains the acceptance bar for “light enough”.
-- Rival ~62% of max speed so a clean hold-W run wins; idle loses.
 - Cloud/agent play is **not** the steering-feel gate.
+
+### Human local follow-up (2026-10-04) — fixed on same PR
+
+Feedback: rival not visible; track much too short.
+
+- **Rival visibility:** prior sprite scale used camera-depth/`z` math that capped ~4px and often spawned under the near-camera. Rival now starts ~28 segments ahead, sized as a fraction of projected road width, brighter red/yellow, dedicated `drawRival`.
+- **Track length:** ~4× prior segment count with more curves; still one finish stub.
+- **Pace:** rival ~52% max — smoke idle-lose ~28s, hold-W win ~16s.
 
 ## Leftover / follow-ups
 
-- Human local feel tune after dedicated test phase if A/D still feels off
+- Human local feel + rival visibility re-check
 - Multi-level progression, combat, economy — out of scope
 - Optional scanline overlay if a later visual pass wants more CRT
 - Arrow keys / gamepad — out of scope
@@ -53,7 +60,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL (default `http://localhost:5173`). Race with WASD; finish for DE/EN result; press **R** to restart. **Please judge steering feel locally.**
+Open the Vite URL (default `http://localhost:5173`). Race with WASD; finish for DE/EN result; press **R** to restart. **Please judge steering feel + rival visibility locally.**
 
 ```bash
 npm run build

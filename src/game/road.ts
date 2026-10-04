@@ -90,22 +90,30 @@ export function buildTrack(): Segment[] {
     }
   };
 
-  // Short curved delivery route — visible bends the player must steer through.
-  add(36, 0);
-  add(28, 3.2);
-  add(22, 0);
-  add(32, -4.0);
-  add(20, 0);
-  add(30, 3.6);
-  add(26, -2.8);
-  add(40, 0);
+  // Longer curved delivery route (~4× prior slice length); one finish stub at end.
+  add(90, 0);
+  add(70, 3.2);
+  add(55, 0);
+  add(80, -4.0);
+  add(50, 0);
+  add(75, 3.6);
+  add(60, -2.8);
+  add(45, 0);
+  add(70, 2.6);
+  add(55, 0);
+  add(85, -3.4);
+  add(50, 3.0);
+  add(60, 0);
+  add(75, -2.4);
+  add(55, 3.8);
+  add(100, 0);
 
   // Roadside props + finish gate near the end.
-  for (let i = 8; i < segments.length - 12; i += 6) {
-    const side = i % 12 === 0 ? -1.4 : 1.4;
-    segments[i].sprites.push({ offset: side, kind: i % 18 === 0 ? "barrel" : "tree" });
+  for (let i = 10; i < segments.length - 16; i += 8) {
+    const side = i % 16 === 0 ? -1.45 : 1.45;
+    segments[i].sprites.push({ offset: side, kind: i % 24 === 0 ? "barrel" : "tree" });
   }
-  const finishIndex = segments.length - 8;
+  const finishIndex = segments.length - 10;
   segments[finishIndex].sprites.push({ offset: 0, kind: "finish" });
   segments[finishIndex].color = {
     road: "#e8e8e8",

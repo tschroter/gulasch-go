@@ -31,7 +31,7 @@ export class Game {
 
   private phase: Phase = "racing";
   private outcome: RaceOutcome | null = null;
-  private rivalBaseSpeed = 17.5;
+  private rivalBaseSpeed = 12;
   private raf = 0;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -103,9 +103,10 @@ export class Game {
     this.phase = "racing";
     this.outcome = null;
     this.ui.hide();
-    this.rivalBaseSpeed = 16.5 + Math.random() * 2.5;
-    this.player.reset(0.02, 1.1);
-    this.rival.reset(0.05, -1.1);
+    // Fair but beatable: player has a slight head start; rival sticks to the racing line.
+    this.rivalBaseSpeed = 11.5 + Math.random() * 1.5;
+    this.player.reset(0.03, 1.15);
+    this.rival.reset(0.01, -1.15);
     this.chase.reset(this.player);
   }
 
@@ -119,10 +120,10 @@ export class Game {
     if (this.phase === "racing") {
       this.player.updatePlayer(dt, this.input.state);
 
-      // Mild reactivity: if player is ahead, rival pushes a bit harder.
+      // Mild reactivity: if player is ahead, rival pushes a little; never a rocket.
       const lead = this.player.progress - this.rival.progress;
       const rivalSpeed =
-        this.rivalBaseSpeed + THREE.MathUtils.clamp(-lead * 8, -2.5, 3.5);
+        this.rivalBaseSpeed + THREE.MathUtils.clamp(-lead * 4, -1.5, 2);
       this.rival.updateRival(dt, rivalSpeed, -1.05);
 
       if (this.player.finished || this.rival.finished) {

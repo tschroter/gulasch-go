@@ -23,13 +23,13 @@ export const RIVAL_PALETTE: TruckPalette = {
   driver: 0xd4a070,
 };
 
-const MAX_SPEED = 28;
-const ACCEL = 34;
-const BRAKE = 42;
+const MAX_SPEED = 30;
+const ACCEL = 38;
+const BRAKE = 46;
 const REVERSE_SPEED = 10;
-const STEER_RATE = 2.1;
-const DRAG = 0.55;
-const LATERAL_SOFT = ROAD_HALF_WIDTH - 0.9;
+const STEER_RATE = 2.35;
+const DRAG = 0.5;
+const LATERAL_SOFT = ROAD_HALF_WIDTH - 0.75;
 
 export class Truck {
   readonly mesh: THREE.Group;

@@ -119,8 +119,11 @@ export class Track {
       positions.push(left.x, left.y, left.z, right.x, right.y, right.z);
 
       const stripe = i % 4 < 2;
-      const tone = stripe ? 0.42 : 0.34;
-      colors.push(tone, tone * 0.92, tone * 0.7, tone, tone * 0.92, tone * 0.7);
+      // Warm asphalt that still reads under the low-res PS1 pass.
+      const r = stripe ? 0.62 : 0.5;
+      const g = stripe ? 0.52 : 0.42;
+      const b = stripe ? 0.36 : 0.3;
+      colors.push(r, g, b, r, g, b);
 
       if (i < segments) {
         const a = i * 2;

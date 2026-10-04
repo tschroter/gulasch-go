@@ -31,6 +31,12 @@ const STEER_RATE = 2.35;
 const DRAG = 0.5;
 const LATERAL_SOFT = ROAD_HALF_WIDTH - 0.75;
 
+/** Shortest-path angle lerp — plain lerp breaks around ±π on curved tracks. */
+function lerpAngle(from: number, to: number, t: number): number {
+  const delta = Math.atan2(Math.sin(to - from), Math.cos(to - from));
+  return from + delta * t;
+}
+
 export class Truck {
   readonly mesh: THREE.Group;
   readonly velocity = new THREE.Vector3();
@@ -143,11 +149,11 @@ export class Truck {
       lateral = Math.sign(lateral) * LATERAL_SOFT;
       // Soft scrub — keep the truck playable through curves.
       this.speed *= 1 - Math.min(0.25, overshoot * 0.12);
-      this.heading = THREE.MathUtils.lerp(this.heading, roadHeading, 0.2);
+      this.heading = lerpAngle(this.heading, roadHeading, 0.2);
     } else if (this.speed > 4) {
       // Arcade assist: ease heading toward the road when roughly on-track.
       const blend = 1 - Math.exp(-1.8 * dt);
-      this.heading = THREE.MathUtils.lerp(this.heading, roadHeading, blend * 0.35);
+      this.heading = lerpAngle(this.heading, roadHeading, blend * 0.35);
     }
 
     this.mesh.position

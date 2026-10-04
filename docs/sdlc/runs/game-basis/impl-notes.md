@@ -29,9 +29,14 @@ Greenfield Vite + TypeScript + Three.js app that boots a short **curved** delive
 - CRT letterbox framing skipped (optional in plan); low-res framebuffer + chunky UI already sell the era.
 - Audio one-shot stub not added (optional / not required).
 
+## Playtest notes (implement)
+
+- Initial AI spawn/speed made the rival too dominant; tuned to slight player head start + ~12 u/s rival so a WASD run can win or lose.
+- Road vertex colors brightened for readability under 320×240 nearest upscale.
+
 ## Leftover / follow-ups
 
-- Tune chase-cam lag / rival fairness after playtest feedback
+- Further chase-cam / rival fairness polish after dedicated test phase
 - Multi-level progression, combat, economy — explicitly out of scope (future slices)
 - Optional CRT overlay / vertex jitter if a later visual pass wants more PS1 warp
 - Arrow keys / gamepad — out of scope for this slice

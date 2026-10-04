@@ -9,8 +9,19 @@ if (!canvas) {
 const game = new Game(canvas);
 game.start();
 
+declare global {
+  interface Window {
+    __gulasch?: Game;
+  }
+}
+
+if (import.meta.env.DEV) {
+  window.__gulasch = game;
+}
+
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     game.dispose();
+    delete window.__gulasch;
   });
 }

@@ -15,6 +15,16 @@ const PS1_HEIGHT = 240;
 
 type Phase = "racing" | "result";
 
+export type GameDebugSnapshot = {
+  phase: Phase;
+  outcome: RaceOutcome | null;
+  playerProgress: number;
+  rivalProgress: number;
+  playerSpeed: number;
+  rivalSpeed: number;
+  elapsed: number;
+};
+
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
@@ -33,6 +43,7 @@ export class Game {
   private outcome: RaceOutcome | null = null;
   private rivalBaseSpeed = 12;
   private raf = 0;
+  private raceElapsed = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -99,9 +110,23 @@ export class Game {
     this.renderer.dispose();
   }
 
+  /** Lightweight snapshot for automated playchecks (not a player-facing feature). */
+  getDebugSnapshot(): GameDebugSnapshot {
+    return {
+      phase: this.phase,
+      outcome: this.outcome,
+      playerProgress: this.player.progress,
+      rivalProgress: this.rival.progress,
+      playerSpeed: this.player.speed,
+      rivalSpeed: this.rival.speed,
+      elapsed: this.raceElapsed,
+    };
+  }
+
   private resetRace(): void {
     this.phase = "racing";
     this.outcome = null;
+    this.raceElapsed = 0;
     this.ui.hide();
     // Fair but beatable: player head start; rival slower than a clean WASD run.
     this.rivalBaseSpeed = 9.2 + Math.random() * 0.8;
@@ -118,6 +143,7 @@ export class Game {
     }
 
     if (this.phase === "racing") {
+      this.raceElapsed += dt;
       this.player.updatePlayer(dt, this.input.state);
 
       // Mild reactivity: if player is ahead, rival pushes a little; never a rocket.

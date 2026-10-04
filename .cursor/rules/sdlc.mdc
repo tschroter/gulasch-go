@@ -15,8 +15,8 @@ When working on a `/sdlc` loop or when plan / implement / test / review agents a
 
 ## Models
 
-- **Project default** and **orchestrator**: Claude Opus 4.8 — Cursor ID `claude-opus-4-8`.
+- **Project chat / orchestrator**: Claude Opus 4.8 — Cursor ID `claude-opus-4-8`, set via the Project chat model picker (no separate Project default-model settings page).
 - **Phase agents** (`plan`, `implement`, `test`, `review`): Claude Sonnet 4.6 — Cursor ID `claude-sonnet-4-6` (pinned in `.cursor/agents/*.md`).
-- Do not switch the four agents to `inherit` or another model; do not run the Project/orchestrator on anything other than Opus 4.8 for SDLC work.
+- Do not switch the four agents to `inherit` or another model; do not run `/sdlc` with a parent/orchestrator model other than Opus 4.8.
 
 Canonical Project doc: Project store `docs/sdlc.md` (when available). Repo overview: `docs/sdlc/README.md`.

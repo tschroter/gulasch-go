@@ -23,11 +23,10 @@ Orchestrate one thin vertical slice for the PS1-era low-poly browser game.
 
 | Role | Model | Cursor model ID |
 | --- | --- | --- |
-| Cursor Project **default** model | Claude Opus 4.8 | `claude-opus-4-8` |
-| Project / `/sdlc` orchestrator (this skill’s parent) | Claude Opus 4.8 | `claude-opus-4-8` |
+| Project chat + `/sdlc` orchestrator (this skill’s parent) | Claude Opus 4.8 | `claude-opus-4-8` |
 | `plan`, `implement`, `test`, `review` subagents | Claude Sonnet 4.6 | `claude-sonnet-4-6` |
 
-- The **Project default model** and the orchestrator are both Opus 4.8 (`claude-opus-4-8`). Skills cannot set Project/parent model in YAML — configure the Project default and the orchestrator chat to Opus 4.8.
+- Set Opus 4.8 in the **Project chat model picker** (orchestrator). There is no dedicated “Project default model” settings screen; skills cannot set the parent model in YAML.
 - Subagents pin Sonnet 4.6 via `model: claude-sonnet-4-6` in `.cursor/agents/*.md`. Do not override to `inherit` or another model when launching them.
 - If a Task/delegation UI asks for a model, pass `claude-sonnet-4-6` for the four SDLC agents.
 

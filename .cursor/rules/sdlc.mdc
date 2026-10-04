@@ -1,5 +1,5 @@
 ---
-description: Enforce GulaschGo SDLC human gate and phase order when /sdlc or phase agents run.
+description: Enforce GulaschGo SDLC human gate, phase order, and model policy when /sdlc or phase agents run.
 alwaysApply: false
 ---
 
@@ -12,5 +12,11 @@ When working on a `/sdlc` loop or when plan / implement / test / review agents a
 - Do not implement, test, or review a slice whose plan is not `approved`.
 - Keep slices thin and PS1-era low-poly browser-game scoped.
 - Write handoffs using `docs/sdlc/templates/` into the active run directory.
+
+## Models
+
+- **Project default** and **orchestrator**: Claude Opus 4.8 — Cursor ID `claude-opus-4-8`.
+- **Phase agents** (`plan`, `implement`, `test`, `review`): Claude Sonnet 4.6 — Cursor ID `claude-sonnet-4-6` (pinned in `.cursor/agents/*.md`).
+- Do not switch the four agents to `inherit` or another model; do not run the Project/orchestrator on anything other than Opus 4.8 for SDLC work.
 
 Canonical Project doc: Project store `docs/sdlc.md` (when available). Repo overview: `docs/sdlc/README.md`.

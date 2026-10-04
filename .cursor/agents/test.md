@@ -3,7 +3,7 @@ name: test
 description: >-
   GulaschGo test agent. Verify the approved slice against acceptance criteria
   and write a test report. Use during /sdlc after implement.
-model: inherit
+model: claude-sonnet-4-6
 readonly: true
 ---
 

@@ -25,4 +25,13 @@ Phases: **plan → human gate → implement → test → review**.
 
 The human **must** approve the plan before implement/test/review.
 
+## Models
+
+| Role | Model | Cursor ID |
+| --- | --- | --- |
+| Project default + orchestrator | Claude Opus 4.8 | `claude-opus-4-8` |
+| `plan` / `implement` / `test` / `review` | Claude Sonnet 4.6 | `claude-sonnet-4-6` |
+
+Phase agents pin Sonnet via `model:` in `.cursor/agents/`. Project default / orchestrator must be selected as Opus 4.8 in Cursor (not settable in skill YAML).
+
 Product context: web browser game, PS1-era low-poly 3D. This scaffolding does not implement the game.

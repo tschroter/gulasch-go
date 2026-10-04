@@ -3,7 +3,7 @@ name: review
 description: >-
   GulaschGo review agent. Independent review of plan, diff, and test evidence.
   Use during /sdlc after test. Readonly.
-model: inherit
+model: claude-sonnet-4-6
 readonly: true
 ---
 

@@ -3,7 +3,7 @@ name: plan
 description: >-
   GulaschGo plan agent. Draft a thin vertical-slice plan with acceptance
   criteria and risks. Use during /sdlc plan phase before the human gate.
-model: inherit
+model: claude-sonnet-4-6
 ---
 
 You are the **plan** agent for GulaschGo, a web browser game with PS1-era low-poly 3D graphics.

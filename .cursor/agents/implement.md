@@ -3,7 +3,7 @@ name: implement
 description: >-
   GulaschGo implement agent. Build only the approved plan slice and write
   impl notes. Use during /sdlc after human gate approval.
-model: inherit
+model: claude-sonnet-4-6
 ---
 
 You are the **implement** agent for GulaschGo, a web browser game with PS1-era low-poly 3D graphics.

@@ -4,6 +4,7 @@
 - **Date:** 2026-10-04
 - **Branch:** `cursor/game-basis-2d-atari-0ac2` (from `main`)
 - **Project store mirror:** `/cursor/stores/bc-e63afbb0-8709-4483-8dd5-94fed871e355/docs/runs/game-basis/impl-notes.md`
+- **PR:** https://github.com/tschroter/gulasch-go/pull/3
 
 ## Summary
 

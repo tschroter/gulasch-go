@@ -13,13 +13,14 @@ await page.waitForFunction(() => window.__gulasch != null);
 
 async function waitResult() {
   // Pass null arg so options aren't swallowed as pageFunction arg (PW default timeout 30s).
+  // ~5.5× track: idle lose ~2.5–3 min; timeout must exceed worst case.
   const handle = await page.waitForFunction(
     () => {
       const s = window.__gulasch.getDebugSnapshot();
       return s.phase === "result" ? s : null;
     },
     null,
-    { timeout: 120000 },
+    { timeout: 360000 },
   );
   return handle.jsonValue();
 }
@@ -44,7 +45,8 @@ if (soloSnap.outcome !== "lose") {
   console.error("FAIL: rival solo should lose for player");
   process.exit(1);
 }
-if (soloSnap.elapsed < 18) {
+// ~5.5× prior ~30s idle lose → floor well below expected (~150–180s).
+if (soloSnap.elapsed < 90) {
   console.error("FAIL: rival solo finished too fast", soloSnap.elapsed);
   process.exit(1);
 }

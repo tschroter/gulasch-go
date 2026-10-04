@@ -22,7 +22,7 @@ Open the URL Vite prints (default `http://localhost:5173`).
 
 ## Slice
 
-Short curved-track delivery race vs one rival, Canvas 2D low-res nearest upscale, bilingual (DE/EN) finish stub.
+Long curved-track delivery race (~5.5× early game-basis length) vs one same-size rival, Canvas 2D low-res nearest upscale, bilingual (DE/EN) finish stub.
 
 **Feel check:** steering lightness is meant for a **human local** playtest (`npm run dev`) — automated smoke only checks win/lose wiring.
 

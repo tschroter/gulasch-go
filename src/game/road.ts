@@ -99,24 +99,24 @@ export function buildTrack(): BuiltTrack {
     }
   };
 
-  // Longer curved delivery route (~4× prior slice length); one finish stub at end.
-  // Curves kept visible but moderated so projector offsets stay sane over drawDistance.
-  add(90, 0);
-  add(70, 2.4);
-  add(55, 0);
-  add(80, -2.8);
-  add(50, 0);
-  add(75, 2.6);
-  add(60, -2.2);
-  add(45, 0);
-  add(70, 2.0);
-  add(55, 0);
-  add(85, -2.6);
-  add(50, 2.2);
-  add(60, 0);
-  add(75, -1.8);
-  add(55, 2.8);
-  add(100, 0);
+  // ~5.5× post–PR #3 segment budget (~1075 → ~5911); curves kept; one finish stub at end.
+  // Curves moderated so projector offsets stay sane over drawDistance.
+  add(495, 0);
+  add(385, 2.4);
+  add(302, 0);
+  add(440, -2.8);
+  add(275, 0);
+  add(412, 2.6);
+  add(330, -2.2);
+  add(248, 0);
+  add(385, 2.0);
+  add(302, 0);
+  add(468, -2.6);
+  add(275, 2.2);
+  add(330, 0);
+  add(412, -1.8);
+  add(302, 2.8);
+  add(550, 0);
 
   // Roadside props + finish gate near the end (slightly sparser for draw cost).
   for (let i = 12; i < segments.length - 16; i += 10) {

@@ -1,0 +1,112 @@
+:root {
+  --ink: #1a1510;
+  --paper: #d8c8a0;
+  --panel: #2a2218;
+  --accent: #c45c26;
+  --win: #6fbf4a;
+  --lose: #d45a4a;
+  --scan: rgba(0, 0, 0, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0d0b08;
+  color: var(--paper);
+  font-family: "Courier New", Courier, monospace;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: 0.04em;
+}
+
+.brand {
+  font-size: 1.35rem;
+  font-weight: bold;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.hint {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+#result {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      var(--scan) 2px,
+      var(--scan) 4px
+    ),
+    rgba(8, 6, 4, 0.72);
+}
+
+#result.hidden {
+  display: none;
+}
+
+.result-panel {
+  width: min(34rem, 90vw);
+  padding: 1.5rem 1.75rem;
+  background: var(--panel);
+  border: 4px solid var(--paper);
+  box-shadow: 0 0 0 4px var(--ink);
+  text-align: center;
+}
+
+.result-panel h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.85rem;
+  text-transform: uppercase;
+}
+
+.result-panel.win h1 {
+  color: var(--win);
+}
+
+.result-panel.lose h1 {
+  color: var(--lose);
+}
+
+.result-panel p {
+  margin: 0.35rem 0;
+  line-height: 1.35;
+}
+
+.result-hint {
+  margin-top: 1.1rem !important;
+  opacity: 0.85;
+  font-size: 0.9rem;
+}

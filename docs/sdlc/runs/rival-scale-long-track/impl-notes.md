@@ -4,7 +4,7 @@
 - **Date:** 2026-10-04
 - **Branch:** `cursor/rival-scale-long-track-6621` (from `main` post PR #3)
 - **Repo mirror:** `docs/sdlc/runs/rival-scale-long-track/impl-notes.md`
-- **PR:** _(filled after draft)_
+- **PR:** https://github.com/tschroter/gulasch-go/pull/4
 
 ## Summary
 

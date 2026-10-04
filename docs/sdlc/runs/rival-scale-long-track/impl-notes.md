@@ -30,7 +30,16 @@ Equalized rival truck on-screen size with the player’s fixed arcade scale (~28
 | Smoke timeout | 120s | **360s** |
 | Smoke solo min | ≥ 18s | **≥ 90s** |
 
-Expected smoke wall-clock (speeds unchanged): idle lose ~**2.5–3 min**, hold-W win ~**1.5–2 min**.
+Expected smoke wall-clock (speeds unchanged): idle lose ~**2.5–3 min**, hold-W win ~**1.5–2.5 min** (curves + no steer in smoke can pull player off-road and slow the W-only run).
+
+### Implement smoke sample (2026-10-04)
+
+```
+rival_solo lose elapsed≈171s finishZ=1180200
+player_w   win  elapsed≈140s (still faster than solo)
+frameMs≈16.7
+OK
+```
 
 ## Deviations from plan
 

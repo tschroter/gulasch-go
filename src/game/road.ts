@@ -2,6 +2,8 @@
 
 export type Segment = {
   index: number;
+  /** Precomputed world Z of p1 (index * segmentLength). */
+  z: number;
   p1: ProjectedPoint;
   p2: ProjectedPoint;
   curve: number;
@@ -10,9 +12,11 @@ export type Segment = {
 };
 
 export type ProjectedPoint = {
-  world: { x: number; y: number; z: number };
-  camera: { x: number; y: number; z: number };
-  screen: { x: number; y: number; w: number };
+  worldZ: number;
+  cameraZ: number;
+  screenX: number;
+  screenY: number;
+  screenW: number;
   scale: number;
 };
 
@@ -32,11 +36,9 @@ export type TrackConfig = {
   segmentLength: number;
   roadWidth: number;
   rumbleWidth: number;
-  lanes: number;
   drawDistance: number;
   cameraHeight: number;
   cameraDepth: number;
-  fogDensity: number;
   maxSpeed: number;
   accel: number;
   brake: number;
@@ -53,11 +55,10 @@ export const TRACK: TrackConfig = {
   segmentLength: 200,
   roadWidth: 2000,
   rumbleWidth: 1.2,
-  lanes: 3,
-  drawDistance: 180,
+  // Enough depth for curves; lower than before to cut projector work.
+  drawDistance: 90,
   cameraHeight: 1000,
   cameraDepth: 0.84,
-  fogDensity: 5,
   maxSpeed: 220,
   accel: 140,
   brake: 280,
@@ -76,6 +77,7 @@ export function buildTrack(): Segment[] {
       const light = Math.floor(index / 3) % 2 === 0;
       segments.push({
         index,
+        z: index * TRACK.segmentLength,
         p1: emptyPoint(),
         p2: emptyPoint(),
         curve,
@@ -91,27 +93,28 @@ export function buildTrack(): Segment[] {
   };
 
   // Longer curved delivery route (~4× prior slice length); one finish stub at end.
+  // Curves kept visible but moderated so projector offsets stay sane over drawDistance.
   add(90, 0);
-  add(70, 3.2);
+  add(70, 2.4);
   add(55, 0);
-  add(80, -4.0);
+  add(80, -2.8);
   add(50, 0);
-  add(75, 3.6);
-  add(60, -2.8);
+  add(75, 2.6);
+  add(60, -2.2);
   add(45, 0);
-  add(70, 2.6);
+  add(70, 2.0);
   add(55, 0);
-  add(85, -3.4);
-  add(50, 3.0);
+  add(85, -2.6);
+  add(50, 2.2);
   add(60, 0);
-  add(75, -2.4);
-  add(55, 3.8);
+  add(75, -1.8);
+  add(55, 2.8);
   add(100, 0);
 
-  // Roadside props + finish gate near the end.
-  for (let i = 10; i < segments.length - 16; i += 8) {
-    const side = i % 16 === 0 ? -1.45 : 1.45;
-    segments[i].sprites.push({ offset: side, kind: i % 24 === 0 ? "barrel" : "tree" });
+  // Roadside props + finish gate near the end (slightly sparser for draw cost).
+  for (let i = 12; i < segments.length - 16; i += 10) {
+    const side = i % 20 === 0 ? -1.45 : 1.45;
+    segments[i].sprites.push({ offset: side, kind: i % 30 === 0 ? "barrel" : "tree" });
   }
   const finishIndex = segments.length - 10;
   segments[finishIndex].sprites.push({ offset: 0, kind: "finish" });
@@ -129,34 +132,39 @@ export function trackLength(segments: Segment[]): number {
   return segments.length * TRACK.segmentLength;
 }
 
-export function findSegment(segments: Segment[], z: number): Segment {
-  const len = trackLength(segments);
-  const zz = ((z % len) + len) % len;
-  return segments[Math.floor(zz / TRACK.segmentLength) % segments.length];
+export function findSegment(segments: Segment[], z: number, totalLength: number): Segment {
+  const zz = ((z % totalLength) + totalLength) % totalLength;
+  return segments[(zz / TRACK.segmentLength) | 0];
 }
 
+/** In-place project a world-Z point into screen space (no allocations). */
 export function project(
   p: ProjectedPoint,
+  worldZ: number,
   cameraX: number,
   cameraY: number,
   cameraZ: number,
   canvasWidth: number,
   canvasHeight: number,
 ): void {
-  p.camera.x = (p.world.x || 0) - cameraX;
-  p.camera.y = (p.world.y || 0) - cameraY;
-  p.camera.z = (p.world.z || 0) - cameraZ;
-  p.scale = TRACK.cameraDepth / Math.max(1, p.camera.z);
-  p.screen.x = Math.round(canvasWidth / 2 + (p.scale * p.camera.x * canvasWidth) / 2);
-  p.screen.y = Math.round(canvasHeight / 2 - (p.scale * p.camera.y * canvasHeight) / 2);
-  p.screen.w = Math.round((p.scale * TRACK.roadWidth * canvasWidth) / 2);
+  p.worldZ = worldZ;
+  p.cameraZ = worldZ - cameraZ;
+  const cz = p.cameraZ > 1 ? p.cameraZ : 1;
+  p.scale = TRACK.cameraDepth / cz;
+  // cameraX is world-space camera X (player lateral + curve offset); negate into view space.
+  p.screenX = ((canvasWidth / 2 - (p.scale * cameraX * canvasWidth) / 2) + 0.5) | 0;
+  // cameraY is camera height; ground at 0 → negative camera-space Y flips to +screenY.
+  p.screenY = ((canvasHeight / 2 + (p.scale * cameraY * canvasHeight) / 2) + 0.5) | 0;
+  p.screenW = ((p.scale * TRACK.roadWidth * canvasWidth) / 2 + 0.5) | 0;
 }
 
 function emptyPoint(): ProjectedPoint {
   return {
-    world: { x: 0, y: 0, z: 0 },
-    camera: { x: 0, y: 0, z: 0 },
-    screen: { x: 0, y: 0, w: 0 },
+    worldZ: 0,
+    cameraZ: 0,
+    screenX: 0,
+    screenY: 0,
+    screenW: 0,
     scale: 0,
   };
 }

@@ -21,7 +21,7 @@ export const RIVAL_TRUCK: TruckPalette = {
   skin: PALETTE.rivalSkin,
 };
 
-/** Chubby rear-view trucker + truck — procedural chunky pixels. */
+/** Chubby rear-view trucker + truck — procedural chunky pixels (no save/restore). */
 export function drawTruck(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -30,34 +30,24 @@ export function drawTruck(
   palette: TruckPalette,
   steerLean = 0,
 ): void {
-  const s = Math.max(4, scale);
-  const lean = Math.max(-1, Math.min(1, steerLean)) * s * 0.15;
-  ctx.save();
-  ctx.translate(Math.round(cx + lean), Math.round(cy));
+  const s = scale > 4 ? scale : 4;
+  const ox = ((cx + Math.max(-1, Math.min(1, steerLean)) * s * 0.15) + 0.5) | 0;
+  const oy = (cy + 0.5) | 0;
 
-  // Tires
-  fillRect(ctx, -s * 0.85, -s * 0.15, s * 0.35, s * 0.35, PALETTE.tire);
-  fillRect(ctx, s * 0.5, -s * 0.15, s * 0.35, s * 0.35, PALETTE.tire);
+  fill(ctx, ox - s * 0.85, oy - s * 0.15, s * 0.35, s * 0.35, PALETTE.tire);
+  fill(ctx, ox + s * 0.5, oy - s * 0.15, s * 0.35, s * 0.35, PALETTE.tire);
 
-  // Chubby cargo box
-  fillRect(ctx, -s * 0.95, -s * 1.05, s * 1.9, s * 0.95, palette.body);
-  fillRect(ctx, -s * 0.75, -s * 0.95, s * 1.5, s * 0.35, palette.accent);
-  // Tiny satirical “G” crate mark
-  fillRect(ctx, -s * 0.15, -s * 0.88, s * 0.3, s * 0.22, PALETTE.ink);
+  fill(ctx, ox - s * 0.95, oy - s * 1.05, s * 1.9, s * 0.95, palette.body);
+  fill(ctx, ox - s * 0.75, oy - s * 0.95, s * 1.5, s * 0.35, palette.accent);
+  fill(ctx, ox - s * 0.15, oy - s * 0.88, s * 0.3, s * 0.22, PALETTE.ink);
 
-  // Cab
-  fillRect(ctx, -s * 0.7, -s * 1.55, s * 1.4, s * 0.55, palette.cab);
-  fillRect(ctx, -s * 0.55, -s * 1.48, s * 1.1, s * 0.28, PALETTE.window);
+  fill(ctx, ox - s * 0.7, oy - s * 1.55, s * 1.4, s * 0.55, palette.cab);
+  fill(ctx, ox - s * 0.55, oy - s * 1.48, s * 1.1, s * 0.28, PALETTE.window);
 
-  // Chubby driver silhouette (rear)
-  fillRect(ctx, -s * 0.22, -s * 1.85, s * 0.44, s * 0.35, palette.skin);
-  fillRect(ctx, -s * 0.32, -s * 1.7, s * 0.64, s * 0.28, palette.cab);
-  // Soft hat / hair bump
-  fillRect(ctx, -s * 0.18, -s * 2.0, s * 0.36, s * 0.18, PALETTE.ink);
-  // Tiny cartoon cig stub (non-graphic placeholder tone)
-  fillRect(ctx, s * 0.2, -s * 1.72, s * 0.18, s * 0.06, PALETTE.smoke);
-
-  ctx.restore();
+  fill(ctx, ox - s * 0.22, oy - s * 1.85, s * 0.44, s * 0.35, palette.skin);
+  fill(ctx, ox - s * 0.32, oy - s * 1.7, s * 0.64, s * 0.28, palette.cab);
+  fill(ctx, ox - s * 0.18, oy - s * 2.0, s * 0.36, s * 0.18, PALETTE.ink);
+  fill(ctx, ox + s * 0.2, oy - s * 1.72, s * 0.18, s * 0.06, PALETTE.smoke);
 }
 
 export function drawProp(
@@ -67,32 +57,29 @@ export function drawProp(
   cy: number,
   scale: number,
 ): void {
-  const s = Math.max(2, scale);
-  ctx.save();
-  ctx.translate(Math.round(cx), Math.round(cy));
+  const s = scale > 2 ? scale : 2;
+  const ox = (cx + 0.5) | 0;
+  const oy = (cy + 0.5) | 0;
 
   if (kind === "tree") {
-    fillRect(ctx, -s * 0.12, -s * 0.9, s * 0.24, s * 0.9, PALETTE.propTrunk);
-    fillRect(ctx, -s * 0.55, -s * 1.55, s * 1.1, s * 0.85, PALETTE.propFoliage);
-    fillRect(ctx, -s * 0.4, -s * 1.85, s * 0.8, s * 0.45, PALETTE.propFoliage);
+    fill(ctx, ox - s * 0.12, oy - s * 0.9, s * 0.24, s * 0.9, PALETTE.propTrunk);
+    fill(ctx, ox - s * 0.55, oy - s * 1.55, s * 1.1, s * 0.85, PALETTE.propFoliage);
+    fill(ctx, ox - s * 0.4, oy - s * 1.85, s * 0.8, s * 0.45, PALETTE.propFoliage);
   } else if (kind === "barrel") {
-    fillRect(ctx, -s * 0.35, -s * 0.7, s * 0.7, s * 0.7, PALETTE.propBarrel);
-    fillRect(ctx, -s * 0.35, -s * 0.55, s * 0.7, s * 0.12, PALETTE.rumbleA);
+    fill(ctx, ox - s * 0.35, oy - s * 0.7, s * 0.7, s * 0.7, PALETTE.propBarrel);
+    fill(ctx, ox - s * 0.35, oy - s * 0.55, s * 0.7, s * 0.12, PALETTE.rumbleA);
   } else {
-    // Finish gate posts + banner
-    fillRect(ctx, -s * 1.6, -s * 2.2, s * 0.25, s * 2.2, PALETTE.finish);
-    fillRect(ctx, s * 1.35, -s * 2.2, s * 0.25, s * 2.2, PALETTE.finish);
-    fillRect(ctx, -s * 1.6, -s * 2.2, s * 3.2, s * 0.45, PALETTE.finishStripe);
-    fillRect(ctx, -s * 1.2, -s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
-    fillRect(ctx, -s * 0.5, -s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
-    fillRect(ctx, s * 0.2, -s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
-    fillRect(ctx, s * 0.9, -s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
+    fill(ctx, ox - s * 1.6, oy - s * 2.2, s * 0.25, s * 2.2, PALETTE.finish);
+    fill(ctx, ox + s * 1.35, oy - s * 2.2, s * 0.25, s * 2.2, PALETTE.finish);
+    fill(ctx, ox - s * 1.6, oy - s * 2.2, s * 3.2, s * 0.45, PALETTE.finishStripe);
+    fill(ctx, ox - s * 1.2, oy - s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
+    fill(ctx, ox - s * 0.5, oy - s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
+    fill(ctx, ox + s * 0.2, oy - s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
+    fill(ctx, ox + s * 0.9, oy - s * 2.05, s * 0.35, s * 0.2, PALETTE.finish);
   }
-
-  ctx.restore();
 }
 
-function fillRect(
+function fill(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -101,5 +88,5 @@ function fillRect(
   color: string,
 ): void {
   ctx.fillStyle = color;
-  ctx.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
+  ctx.fillRect(x | 0, y | 0, w > 1 ? w | 0 : 1, h > 1 ? h | 0 : 1);
 }

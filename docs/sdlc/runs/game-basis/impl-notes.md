@@ -46,9 +46,23 @@ Feedback: rival not visible; track much too short.
 - **Track length:** ~4× prior segment count with more curves; still one finish stub.
 - **Pace:** rival ~52% max — smoke idle-lose ~28s, hold-W win ~16s.
 
+### Human local follow-up (2026-10-04) — lag / FPS
+
+Feedback: game lagged badly (poor frame rate / stutter).
+
+**Root causes addressed:**
+
+1. **Full-width grass overdraw** — every segment painted `fillRect(0, y, FB_W, h)`. Now left/right grass strips only (+ one ground fill under horizon).
+2. **Huge display blit** — canvas was `window × devicePixelRatio`. Now integer upscale of 320×200 capped at **3×** (`desynchronized` 2D contexts).
+3. **Projector work** — `drawDistance` 180→90; precomputed segment `z`; cached track length in `findSegment`; early exit at horizon; 1px bands use `fillRect`; sparser props.
+4. **Sprite path** — no per-sprite `save()/restore()/translate()`.
+5. **Debug** — `getDebugSnapshot().frameMs` EMA for local checks.
+
+Headless sample while racing: ~16.7ms/frame (~60fps). Smoke still OK.
+
 ## Leftover / follow-ups
 
-- Human local feel + rival visibility re-check
+- Human local feel + rival visibility + FPS re-check
 - Multi-level progression, combat, economy — out of scope
 - Optional scanline overlay if a later visual pass wants more CRT
 - Arrow keys / gamepad — out of scope
@@ -60,7 +74,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL (default `http://localhost:5173`). Race with WASD; finish for DE/EN result; press **R** to restart. **Please judge steering feel + rival visibility locally.**
+Open the Vite URL (default `http://localhost:5173`). Race with WASD; finish for DE/EN result; press **R** to restart. **Please judge steering feel, rival visibility, and smoothness locally.**
 
 ```bash
 npm run build

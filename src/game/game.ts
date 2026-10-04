@@ -24,11 +24,15 @@ export type DebugSnapshot = {
   rivalZ: number;
   playerX: number;
   speed: number;
+  /** Rolling average frame time ms (dev/smoke aid). */
+  frameMs: number;
 };
 
 const FB_W = 320;
 const FB_H = 200;
 const FINISH_Z_RATIO = 0.92;
+/** Cap display buffer scale — avoids full-window×DPR blits. */
+const MAX_SCALE = 3;
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;
@@ -40,6 +44,7 @@ export class Game {
   private readonly segments: Segment[];
   private readonly totalLength: number;
   private readonly finishZ: number;
+  private readonly segCount: number;
 
   private playerX = 0;
   private playerZ = 0;
@@ -52,10 +57,12 @@ export class Game {
   private raf = 0;
   private lastTs = 0;
   private steerLean = 0;
+  private frameMs = 16;
+  private displayScale = 1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
     if (!ctx) throw new Error("2D context unavailable");
     this.ctx = ctx;
     this.ctx.imageSmoothingEnabled = false;
@@ -63,12 +70,13 @@ export class Game {
     this.fb = document.createElement("canvas");
     this.fb.width = FB_W;
     this.fb.height = FB_H;
-    const fbCtx = this.fb.getContext("2d");
+    const fbCtx = this.fb.getContext("2d", { alpha: false, desynchronized: true });
     if (!fbCtx) throw new Error("Framebuffer 2D context unavailable");
     this.fbCtx = fbCtx;
     this.fbCtx.imageSmoothingEnabled = false;
 
     this.segments = buildTrack();
+    this.segCount = this.segments.length;
     this.totalLength = trackLength(this.segments);
     this.finishZ = this.totalLength * FINISH_Z_RATIO;
     this.resetRace();
@@ -77,8 +85,11 @@ export class Game {
   start(): void {
     this.lastTs = performance.now();
     const loop = (ts: number): void => {
-      const dt = Math.min(0.05, (ts - this.lastTs) / 1000);
+      const dtMs = ts - this.lastTs;
       this.lastTs = ts;
+      // EMA of frame time for debug; clamp sim dt.
+      this.frameMs = this.frameMs * 0.9 + dtMs * 0.1;
+      const dt = dtMs > 50 ? 0.05 : dtMs / 1000;
       this.update(dt);
       this.render();
       this.raf = requestAnimationFrame(loop);
@@ -103,6 +114,7 @@ export class Game {
       rivalZ: this.rivalZ,
       playerX: this.playerX,
       speed: this.speed,
+      frameMs: this.frameMs,
     };
   }
 
@@ -131,38 +143,31 @@ export class Game {
     this.elapsed += dt;
     const keys = this.input.state;
 
-    // Light arcade throttle — snappy, not tanky.
     if (keys.forward) this.speed += TRACK.accel * dt;
     else if (keys.back) this.speed -= TRACK.brake * dt;
     else this.speed -= TRACK.decel * dt;
 
     this.speed = Math.max(0, Math.min(TRACK.maxSpeed, this.speed));
 
-    const segment = findSegment(this.segments, this.playerZ);
+    const segment = findSegment(this.segments, this.playerZ, this.totalLength);
     const speedPct = this.speed / TRACK.maxSpeed;
     const dx = TRACK.steerSpeed * speedPct * dt;
 
-    // Immediate lateral response (minimal inertia).
     if (keys.left) this.playerX -= dx;
     if (keys.right) this.playerX += dx;
-
-    // Curve pull — present but not “sehr schwer”.
     this.playerX -= dx * speedPct * segment.curve * TRACK.centrifugal;
 
-    const offRoad = Math.abs(this.playerX) > 1;
-    if (offRoad) {
-      if (this.speed > TRACK.offRoadLimit) {
-        this.speed -= TRACK.offRoadDecel * dt;
-      }
+    if (Math.abs(this.playerX) > 1) {
+      if (this.speed > TRACK.offRoadLimit) this.speed -= TRACK.offRoadDecel * dt;
       this.playerX = Math.max(-1.5, Math.min(1.5, this.playerX));
     } else {
       this.playerX = Math.max(-1.2, Math.min(1.2, this.playerX));
     }
 
     this.playerZ += this.speed * dt * 60;
-    this.steerLean += ((keys.left ? -1 : 0) + (keys.right ? 1 : 0) - this.steerLean) * Math.min(1, dt * 12);
+    const steerTarget = (keys.left ? -1 : 0) + (keys.right ? 1 : 0);
+    this.steerLean += (steerTarget - this.steerLean) * Math.min(1, dt * 12);
 
-    // Rival: steady advance, mild weave; beatable with clean hold-W on the longer course.
     const rivalSpeed = TRACK.maxSpeed * 0.52;
     this.rivalZ += rivalSpeed * dt * 60;
     this.rivalX = 0.22 + Math.sin(this.rivalZ * 0.0016) * 0.28;
@@ -186,39 +191,37 @@ export class Game {
 
   private render(): void {
     const ctx = this.fbCtx;
-    const base = findSegment(this.segments, this.playerZ);
+    const base = findSegment(this.segments, this.playerZ, this.totalLength);
+    const baseIndex = base.index;
     const cameraZ = this.playerZ;
+    const playerCamX = this.playerX * TRACK.roadWidth;
     let x = 0;
     let dx = 0;
     let maxY = FB_H;
 
-    // Sky bands (flat — no smooth gradient fill).
-    const horizon = Math.floor(FB_H * 0.42);
+    // Sky + solid ground under horizon (covers gaps; avoids black holes).
+    const horizon = (FB_H * 0.42) | 0;
     ctx.fillStyle = PALETTE.skyTop;
     ctx.fillRect(0, 0, FB_W, horizon);
     ctx.fillStyle = PALETTE.skyBot;
-    ctx.fillRect(0, Math.floor(horizon * 0.55), FB_W, horizon - Math.floor(horizon * 0.55));
+    ctx.fillRect(0, (horizon * 0.55) | 0, FB_W, horizon - ((horizon * 0.55) | 0));
     ctx.fillStyle = PALETTE.hill;
     ctx.fillRect(0, horizon - 8, FB_W, 8);
+    ctx.fillStyle = PALETTE.grassA;
+    ctx.fillRect(0, horizon, FB_W, FB_H - horizon);
 
-    // Project + draw road far → near (Jake Gordon–style segment projector).
+    // Project + draw near → far with maxY clip (each band painted once).
     for (let n = 0; n < TRACK.drawDistance; n++) {
-      const segIndex = (base.index + n) % this.segments.length;
-      const segment = this.segments[segIndex];
-      const looped = segIndex < base.index;
-      const camZ = cameraZ - (looped ? this.totalLength : 0);
+      const segIndex = baseIndex + n;
+      const segment = this.segments[segIndex < this.segCount ? segIndex : segIndex - this.segCount];
+      const looped = segIndex >= this.segCount;
+      const camZ = looped ? cameraZ - this.totalLength : cameraZ;
 
-      segment.p1.world.z = segIndex * TRACK.segmentLength;
-      segment.p2.world.z = segment.p1.world.z + TRACK.segmentLength;
-      segment.p1.world.y = 0;
-      segment.p2.world.y = 0;
-      segment.p1.world.x = 0;
-      segment.p2.world.x = 0;
-
-      project(segment.p1, this.playerX * TRACK.roadWidth - x, TRACK.cameraHeight, camZ, FB_W, FB_H);
+      project(segment.p1, segment.z, playerCamX - x, TRACK.cameraHeight, camZ, FB_W, FB_H);
       project(
         segment.p2,
-        this.playerX * TRACK.roadWidth - x - dx,
+        segment.z + TRACK.segmentLength,
+        playerCamX - x - dx,
         TRACK.cameraHeight,
         camZ,
         FB_W,
@@ -228,114 +231,173 @@ export class Game {
       x += dx;
       dx += segment.curve;
 
+      const y1 = segment.p1.screenY;
+      const y2 = segment.p2.screenY;
       if (
-        segment.p1.camera.z <= TRACK.cameraDepth ||
-        segment.p2.screen.y >= segment.p1.screen.y ||
-        segment.p2.screen.y >= maxY
+        segment.p1.cameraZ <= TRACK.cameraDepth ||
+        y2 >= y1 ||
+        y2 >= maxY ||
+        segment.p1.screenW > FB_W * 3
       ) {
         continue;
       }
 
       this.drawSegment(ctx, segment);
-      maxY = segment.p2.screen.y;
+      maxY = y2;
+      if (maxY <= horizon) break;
     }
 
-    // Sprites (far → near so nearer props/rival paint on top).
-    this.drawSprites(base);
-    this.drawRival(base);
+    this.drawSprites(baseIndex);
+    this.drawRival(baseIndex);
 
-    // Player truck fixed near bottom-center.
     drawTruck(ctx, FB_W / 2, FB_H - 18, 28, PLAYER_TRUCK, this.steerLean);
 
-    // Nearest-neighbor upscale to display canvas.
-    this.ctx.imageSmoothingEnabled = false;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(this.fb, 0, 0, this.canvas.width, this.canvas.height);
+    // Integer-scaled blit (canvas buffer is FB×scale, not window×DPR).
+    this.ctx.drawImage(
+      this.fb,
+      0,
+      0,
+      FB_W,
+      FB_H,
+      0,
+      0,
+      FB_W * this.displayScale,
+      FB_H * this.displayScale,
+    );
   }
 
+  /**
+   * Side grass strips + rumble + road — no full-width fillRect overdraw.
+   * Matches Jake Gordon’s segment paint (left/right grass only).
+   */
   private drawSegment(ctx: CanvasRenderingContext2D, segment: Segment): void {
-    const p1 = segment.p1.screen;
-    const p2 = segment.p2.screen;
-    const rumbleW = TRACK.rumbleWidth;
+    const y1 = segment.p1.screenY;
+    const y2 = segment.p2.screenY;
+    const h = y1 - y2;
+    if (h < 1) return;
 
-    // Grass
-    ctx.fillStyle = segment.color.grass;
-    ctx.fillRect(0, p2.y, FB_W, Math.max(1, p1.y - p2.y));
+    const rumble = TRACK.rumbleWidth;
+    // Clamp projected edges so hard curves cannot spray inverted quads across the sky.
+    const x1 = segment.p1.screenX;
+    const w1 = segment.p1.screenW;
+    const x2 = segment.p2.screenX;
+    const w2 = segment.p2.screenW;
+    const l1 = Math.max(-FB_W, Math.min(FB_W * 2, x1 - w1 * rumble));
+    const r1 = Math.max(-FB_W, Math.min(FB_W * 2, x1 + w1 * rumble));
+    const l2 = Math.max(-FB_W, Math.min(FB_W * 2, x2 - w2 * rumble));
+    const r2 = Math.max(-FB_W, Math.min(FB_W * 2, x2 + w2 * rumble));
+    const rl1 = Math.max(-FB_W, Math.min(FB_W * 2, x1 - w1));
+    const rr1 = Math.max(-FB_W, Math.min(FB_W * 2, x1 + w1));
+    const rl2 = Math.max(-FB_W, Math.min(FB_W * 2, x2 - w2));
+    const rr2 = Math.max(-FB_W, Math.min(FB_W * 2, x2 + w2));
 
-    // Rumble + road polygons
-    this.polygon(ctx, segment.color.rumble, p1.x, p1.y, p1.w * rumbleW, p2.x, p2.y, p2.w * rumbleW);
-    this.polygon(ctx, segment.color.road, p1.x, p1.y, p1.w, p2.x, p2.y, p2.w);
+    // 1px bands: fillRect is cheaper than path quads.
+    if (h <= 1) {
+      const y = y2 | 0;
+      ctx.fillStyle = segment.color.grass;
+      ctx.fillRect(0, y, Math.max(0, l2) | 0, 1);
+      ctx.fillRect(Math.min(FB_W, r2) | 0, y, FB_W, 1);
+      ctx.fillStyle = segment.color.rumble;
+      ctx.fillRect(l2 | 0, y, Math.max(1, (r2 - l2) | 0), 1);
+      ctx.fillStyle = segment.color.road;
+      ctx.fillRect(rl2 | 0, y, Math.max(1, (rr2 - rl2) | 0), 1);
+      return;
+    }
 
-    if (segment.color.lane) {
-      const laneW1 = p1.w * 0.04;
-      const laneW2 = p2.w * 0.04;
-      this.polygon(ctx, segment.color.lane, p1.x, p1.y, laneW1, p2.x, p2.y, laneW2);
+    this.quad(ctx, segment.color.grass, 0, y1, l1, y1, l2, y2, 0, y2);
+    this.quad(ctx, segment.color.grass, r1, y1, FB_W, y1, FB_W, y2, r2, y2);
+    this.quad(ctx, segment.color.rumble, l1, y1, r1, y1, r2, y2, l2, y2);
+    this.quad(ctx, segment.color.road, rl1, y1, rr1, y1, rr2, y2, rl2, y2);
+
+    if (segment.color.lane && w1 > 8) {
+      const lw1 = w1 * 0.04;
+      const lw2 = w2 * 0.04;
+      this.quad(ctx, segment.color.lane, x1 - lw1, y1, x1 + lw1, y1, x2 + lw2, y2, x2 - lw2, y2);
     }
   }
 
-  private drawSprites(base: Segment): void {
+  private drawSprites(baseIndex: number): void {
     const ctx = this.fbCtx;
     for (let n = TRACK.drawDistance - 1; n > 0; n--) {
-      const segment = this.segments[(base.index + n) % this.segments.length];
-      if (segment.p1.scale <= 0 || segment.p1.camera.z <= TRACK.cameraDepth) continue;
-      if (segment.p1.screen.y < 0 || segment.p1.screen.y > FB_H) continue;
+      const segIndex = baseIndex + n;
+      const segment = this.segments[segIndex < this.segCount ? segIndex : segIndex - this.segCount];
+      const sprites = segment.sprites;
+      if (sprites.length === 0) continue;
+      if (segment.p1.cameraZ <= TRACK.cameraDepth) continue;
 
-      const roadHalf = Math.max(4, segment.p1.screen.w);
-      for (const sprite of segment.sprites) {
+      const roadHalf = segment.p1.screenW;
+      const spriteY = segment.p1.screenY;
+      if (roadHalf < 4 || spriteY < 0 || spriteY > FB_H) continue;
+
+      for (let i = 0; i < sprites.length; i++) {
+        const sprite = sprites[i];
         const spriteScale = roadHalf * (sprite.kind === "finish" ? 0.85 : 0.4);
-        const spriteX = segment.p1.screen.x + sprite.offset * roadHalf;
-        const spriteY = segment.p1.screen.y;
-        drawProp(ctx, sprite.kind, spriteX, spriteY, spriteScale);
+        // Skip sub-pixel props in the distance.
+        if (spriteScale < 3 && sprite.kind !== "finish") continue;
+        drawProp(
+          ctx,
+          sprite.kind,
+          segment.p1.screenX + sprite.offset * roadHalf,
+          spriteY,
+          spriteScale,
+        );
       }
     }
   }
 
-  /** Draw rival sized as a fraction of road width so it stays readable ahead. */
-  private drawRival(base: Segment): void {
+  private drawRival(baseIndex: number): void {
     if (this.rivalZ <= this.playerZ) return;
 
-    const rivalSeg = findSegment(this.segments, this.rivalZ);
-    let n = rivalSeg.index - base.index;
-    if (n < 0) n += this.segments.length;
+    const rivalSeg = findSegment(this.segments, this.rivalZ, this.totalLength);
+    let n = rivalSeg.index - baseIndex;
+    if (n < 0) n += this.segCount;
     if (n <= 0 || n >= TRACK.drawDistance) return;
 
-    const segment = this.segments[(base.index + n) % this.segments.length];
-    if (segment.p1.camera.z <= TRACK.cameraDepth) return;
+    const segment = this.segments[(baseIndex + n) % this.segCount];
+    if (segment.p1.cameraZ <= TRACK.cameraDepth) return;
 
-    const roadHalf = segment.p1.screen.w;
-    const spriteY = segment.p1.screen.y;
+    const roadHalf = segment.p1.screenW;
+    const spriteY = segment.p1.screenY;
     if (roadHalf < 3 || spriteY < 8 || spriteY > FB_H - 4) return;
 
-    // ~half road half-width ≈ clearly truck-sized vs road; floor keeps far rival readable.
     const spriteScale = Math.max(10, Math.min(48, roadHalf * 0.55));
-    const spriteX = segment.p1.screen.x + this.rivalX * roadHalf;
-    drawTruck(this.fbCtx, spriteX, spriteY, spriteScale, RIVAL_TRUCK, 0);
+    drawTruck(
+      this.fbCtx,
+      segment.p1.screenX + this.rivalX * roadHalf,
+      spriteY,
+      spriteScale,
+      RIVAL_TRUCK,
+      0,
+    );
   }
 
-  private polygon(
+  private quad(
     ctx: CanvasRenderingContext2D,
     color: string,
     x1: number,
     y1: number,
-    w1: number,
     x2: number,
     y2: number,
-    w2: number,
+    x3: number,
+    y3: number,
+    x4: number,
+    y4: number,
   ): void {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.moveTo(x1 - w1, y1);
-    ctx.lineTo(x2 - w2, y2);
-    ctx.lineTo(x2 + w2, y2);
-    ctx.lineTo(x1 + w1, y1);
-    ctx.closePath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.lineTo(x4, y4);
     ctx.fill();
   }
 
   private readonly onResize = (): void => {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    this.canvas.width = Math.floor(window.innerWidth * dpr);
-    this.canvas.height = Math.floor(window.innerHeight * dpr);
+    const sw = window.innerWidth || FB_W;
+    const sh = window.innerHeight || FB_H;
+    this.displayScale = Math.max(1, Math.min(MAX_SCALE, Math.floor(Math.min(sw / FB_W, sh / FB_H))));
+    this.canvas.width = FB_W * this.displayScale;
+    this.canvas.height = FB_H * this.displayScale;
     this.ctx.imageSmoothingEnabled = false;
   };
 }

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-export const ROAD_WIDTH = 10;
-export const SHOULDER_WIDTH = 12;
+export const ROAD_WIDTH = 14;
+export const SHOULDER_WIDTH = 16;
 
 const CONTROL_POINTS = [
   new THREE.Vector3(0, 0, 0),

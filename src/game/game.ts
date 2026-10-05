@@ -49,8 +49,8 @@ export class Game {
   private readonly view: RaceRenderer;
   private readonly racers: RacerState[] = [
     { name: "OTTO", distance: 0, lateral: 0, speed: 0, finished: false },
-    { name: "HANS", distance: 18, lateral: -1.8, speed: 23.4, finished: false },
-    { name: "FRITZ", distance: 34, lateral: 1.8, speed: 22.2, finished: false },
+    { name: "HANS", distance: 10, lateral: -4, speed: 23.4, finished: false },
+    { name: "FRITZ", distance: 26, lateral: 4, speed: 22.2, finished: false },
   ];
   private phase: "racing" | "result" = "racing";
   private outcome: RaceOutcome | null = null;
@@ -70,7 +70,7 @@ export class Game {
   start(): void {
     this.lastTs = performance.now();
     const loop = (ts: number): void => {
-      const dtMs = ts - this.lastTs;
+      const dtMs = Math.max(0, ts - this.lastTs);
       this.lastTs = ts;
       this.frameMs = this.frameMs * 0.9 + dtMs * 0.1;
       this.frameSamples.push(dtMs);
@@ -129,14 +129,14 @@ export class Game {
       finished: false,
     });
     Object.assign(this.racers[1], {
-      distance: 18,
-      lateral: -1.8,
+      distance: 10,
+      lateral: -4,
       speed: 23.4,
       finished: false,
     });
     Object.assign(this.racers[2], {
-      distance: 34,
-      lateral: 1.8,
+      distance: 26,
+      lateral: 4,
       speed: 22.2,
       finished: false,
     });
@@ -186,8 +186,8 @@ export class Game {
     const fritz = this.racers[2];
     hans.distance += hans.speed * dt;
     fritz.distance += fritz.speed * dt;
-    hans.lateral = -1.8 + Math.sin(hans.distance * 0.025) * 0.32;
-    fritz.lateral = 1.8 + Math.sin(fritz.distance * 0.021 + 1.7) * 0.3;
+    hans.lateral = -4 + Math.sin(hans.distance * 0.025) * 0.28;
+    fritz.lateral = 4 + Math.sin(fritz.distance * 0.021 + 1.7) * 0.28;
 
     this.checkFinish();
     this.updateHud();

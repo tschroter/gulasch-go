@@ -49,6 +49,24 @@ snapshot measured 26–28 draw calls / about 9,000 triangles.
 - Fix: use `forward × up` as route right and expose projected player screen X in the
   debug snapshot for a targeted A/D regression assertion.
 
+## Visual-blocker correction
+
+- Commits `4d12dbc` and `9924a51` fix the road/terrain and plate blockers from the
+  second human playtest.
+- Missing road root cause: the steering-basis correction reversed ribbon vertex
+  orientation without updating triangle winding, so front-face culling removed the
+  road and shoulder. The ribbon indices now keep all surfaces upward-facing.
+- Floating road root cause: the route climbs roughly 36 world units while the old
+  ground was one flat plane at the starting elevation. A faceted route-following
+  terrain mesh now samples the route height and slopes away from it, keeping visible
+  ground below every route segment.
+- Unreadable player name root cause: the low bumper plate fell below the chase-camera
+  crop and behind the bottom-center speed HUD. The nearest-filtered, name-only board
+  is now enlarged and mounted high on the rear door; `OTTO` remains readable.
+- Targeted checks sampled start, mid-route, high route, and finish approach without a
+  full playthrough. All rendered in racing state at 19,734–20,242 triangles, below
+  the 50,000 budget. `npm run build` passes.
+
 ## Deviations from plan
 
 - No functional scope deviation.
@@ -69,8 +87,10 @@ snapshot measured 26–28 draw calls / about 9,000 triangles.
 
 ## Evidence
 
-- `media/ps1-visual-basis/final_race_start.png`
-- `media/ps1-visual-basis/final_arcade_controls.webm`
+- `media/ps1-visual-basis/visual_fix_plate_v2.png`
+- `media/ps1-visual-basis/visual_fix_mid_route.png`
+- `media/ps1-visual-basis/visual_fix_high_route.png`
+- `media/ps1-visual-basis/visual_fix_finish_approach.png`
 
 ## How to try it
 

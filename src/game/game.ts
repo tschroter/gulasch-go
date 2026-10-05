@@ -10,9 +10,11 @@ import {
 } from "./road";
 import {
   PLAYER_TRUCK,
+  PLAYER_TRUCK_SCALE,
   RIVAL_TRUCK,
   drawProp,
   drawTruck,
+  truckScaleFromRoadHalf,
 } from "./sprites";
 import { RaceUI, type RaceOutcome } from "./ui";
 
@@ -255,7 +257,7 @@ export class Game {
     this.drawSprites(baseIndex);
     this.drawRival(baseIndex);
 
-    drawTruck(ctx, FB_W / 2, FB_H - 18, 28, PLAYER_TRUCK, this.steerLean);
+    drawTruck(ctx, FB_W / 2, FB_H - 18, PLAYER_TRUCK_SCALE, PLAYER_TRUCK, this.steerLean);
 
     // Integer-scaled blit (canvas buffer is FB×scale, not window×DPR).
     this.ctx.drawImage(
@@ -365,7 +367,7 @@ export class Game {
     const spriteY = segment.p1.screenY;
     if (roadHalf < 3 || spriteY < 8 || spriteY > FB_H - 4) return;
 
-    const spriteScale = Math.max(10, Math.min(48, roadHalf * 0.55));
+    const spriteScale = truckScaleFromRoadHalf(roadHalf);
     drawTruck(
       this.fbCtx,
       segment.p1.screenX + this.rivalX * roadHalf,

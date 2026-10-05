@@ -21,6 +21,24 @@ export const RIVAL_TRUCK: TruckPalette = {
   skin: PALETTE.rivalSkin,
 };
 
+/** Fixed bottom-anchored player arcade sprite scale. */
+export const PLAYER_TRUCK_SCALE = 28;
+
+/**
+ * Projected road half-width (screenW) at which a rival should match
+ * PLAYER_TRUCK_SCALE — near-camera size language shared with the player.
+ */
+const NEAR_ROAD_HALF_FOR_PLAYER_SIZE = 80;
+
+/**
+ * Rival/hostile truck scale from projected road half-width.
+ * Caps at PLAYER_TRUCK_SCALE so near rivals never read larger than the player.
+ */
+export function truckScaleFromRoadHalf(roadHalf: number): number {
+  const scale = roadHalf * (PLAYER_TRUCK_SCALE / NEAR_ROAD_HALF_FOR_PLAYER_SIZE);
+  return Math.max(4, Math.min(PLAYER_TRUCK_SCALE, scale));
+}
+
 /** Chubby rear-view trucker + truck — procedural chunky pixels (no save/restore). */
 export function drawTruck(
   ctx: CanvasRenderingContext2D,

@@ -9,8 +9,10 @@ import {
   type Segment,
 } from "./road";
 import {
+  PLAYER_PLATE,
   PLAYER_TRUCK,
   PLAYER_TRUCK_SCALE,
+  RIVAL_PLATE,
   RIVAL_TRUCK,
   drawProp,
   drawTruck,
@@ -257,7 +259,15 @@ export class Game {
     this.drawSprites(baseIndex);
     this.drawRival(baseIndex);
 
-    drawTruck(ctx, FB_W / 2, FB_H - 18, PLAYER_TRUCK_SCALE, PLAYER_TRUCK, this.steerLean);
+    drawTruck(
+      ctx,
+      FB_W / 2,
+      FB_H - 18,
+      PLAYER_TRUCK_SCALE,
+      PLAYER_TRUCK,
+      this.steerLean,
+      PLAYER_PLATE,
+    );
 
     // Integer-scaled blit (canvas buffer is FB×scale, not window×DPR).
     this.ctx.drawImage(
@@ -375,6 +385,7 @@ export class Game {
       spriteScale,
       RIVAL_TRUCK,
       0,
+      RIVAL_PLATE,
     );
   }
 

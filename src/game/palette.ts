@@ -28,4 +28,9 @@ export const PALETTE = {
   window: "#2a4058",
   tire: "#222018",
   smoke: "#9a9080",
+  /** Stew / Gulasch cargo cue — warm brown-orange block. */
+  stew: "#b05028",
+  stewLid: "#8a3a18",
+  plate: "#f0e8c8",
+  plateEdge: "#1a1510",
 } as const;

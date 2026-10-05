@@ -138,10 +138,10 @@ export function createTruck(identity: TruckIdentity): THREE.Group {
   truck.add(cargoPanel);
 
   const namePlate = new THREE.Mesh(
-    new THREE.PlaneGeometry(3, 0.82),
+    new THREE.PlaneGeometry(2.8, 0.62),
     new THREE.MeshBasicMaterial({ map: plateTexture(identity.name), transparent: false }),
   );
-  namePlate.position.set(0, 1.62, -3.3);
+  namePlate.position.set(0, 5.38, -2.99);
   namePlate.rotation.y = Math.PI;
   truck.add(namePlate);
 

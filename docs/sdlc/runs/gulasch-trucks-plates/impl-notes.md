@@ -7,7 +7,7 @@
 
 ## Summary
 
-Player and rival now share a rear-view **Gulasch transport** silhouette: taller **cargo box** + lid, stew-colored band, small **pot/barrel** cue, cab + chubby trucker above. Each vehicle has a stable unique **name-only Kennzeichen** (`OTTO` / `FRITZ`) drawn as chunky 3×5 glyphs on a rear plate (solid rect only when scale &lt; 12). `PLAYER_TRUCK_SCALE` (28) and `truckScaleFromRoadHalf` from PR #4 are unchanged. No feel / track / AI changes.
+Player and rival now share a rear-view **Gulasch transport** silhouette: taller **cargo box** + lid, stew-colored band, small **pot/barrel** cue, cab + chubby trucker above. Each vehicle has a stable unique **name-only Kennzeichen** (`OTTO` / `HANS`) drawn as chunky 3×5 glyphs on a rear plate (solid rect only when scale &lt; 12). `PLAYER_TRUCK_SCALE` (28) and `truckScaleFromRoadHalf` from PR #4 are unchanged. No feel / track / AI changes.
 
 ## Files touched
 
@@ -25,7 +25,7 @@ Player and rival now share a rear-view **Gulasch transport** silhouette: taller 
 
 - Human-local glance: cargo reads as Gulasch transport; `OTTO`/`FRITZ` readable at player scale
 - Test/review agents (orchestrator) — not run by implement
-- Extra name glyphs only if future plates use letters beyond F/I/O/R/T/Z
+- Extra name glyphs only if future plates use letters beyond A/H/N/O/S/T
 
 ## How to try it
 
@@ -34,7 +34,7 @@ npm install
 npm run dev
 ```
 
-Open Vite URL. Player plate **OTTO**, rival **FRITZ**; cab+cargo+pot should read at a glance. WASD / finish-at-gate / **R** unchanged.
+Open Vite URL. Player plate **OTTO**, rival **HANS**; cab+cargo+pot should read at a glance. WASD / finish-at-gate / **R** unchanged.
 
 ```bash
 npm run build

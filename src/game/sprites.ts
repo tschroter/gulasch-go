@@ -23,7 +23,7 @@ export const RIVAL_TRUCK: TruckPalette = {
 
 /** Stable name-only Kennzeichen (driver/vehicle) — not DE-style plates. */
 export const PLAYER_PLATE = "OTTO";
-export const RIVAL_PLATE = "FRITZ";
+export const RIVAL_PLATE = "HANS";
 
 /** Fixed bottom-anchored player arcade sprite scale. */
 export const PLAYER_TRUCK_SCALE = 28;
@@ -75,18 +75,19 @@ export function drawTruck(
   fill(ctx, ox - s * 0.85, oy - s * 1.05, s * 1.7, s * 0.28, PALETTE.stew);
   fill(ctx, ox - s * 0.85, oy - s * 1.05, s * 1.7, s * 0.06, PALETTE.stewLid);
 
-  // Small pot/barrel cue on cargo face (both-lite)
+  // Small pot/barrel cue on cargo face (both-lite) — left of plate
   if (s >= 8) {
-    const potX = ox - s * 0.55;
-    const potY = oy - s * 0.72;
-    fill(ctx, potX, potY, s * 0.38, s * 0.32, PALETTE.propBarrel);
-    fill(ctx, potX - s * 0.02, potY - s * 0.06, s * 0.42, s * 0.08, PALETTE.stewLid);
-    fill(ctx, potX + s * 0.08, potY + s * 0.08, s * 0.22, s * 0.1, PALETTE.stew);
+    const potX = ox + s * 0.42;
+    const potY = oy - s * 0.78;
+    fill(ctx, potX, potY, s * 0.42, s * 0.38, PALETTE.propBarrel);
+    fill(ctx, potX - s * 0.03, potY - s * 0.08, s * 0.48, s * 0.1, PALETTE.stewLid);
+    fill(ctx, potX + s * 0.1, potY + s * 0.1, s * 0.22, s * 0.12, PALETTE.stew);
+    fill(ctx, potX + s * 0.06, potY + s * 0.22, s * 0.3, s * 0.06, PALETTE.rumbleA);
   }
 
   // Name-only Kennzeichen on rear of cargo
   if (plate) {
-    drawPlate(ctx, ox, oy - s * 0.42, s, plate);
+    drawPlate(ctx, ox, oy - s * 0.38, s, plate);
   }
 
   // Cab above cargo
@@ -108,8 +109,8 @@ function drawPlate(
   s: number,
   name: string,
 ): void {
-  const pw = s * 1.15;
-  const ph = s * 0.34;
+  const pw = s * 1.55;
+  const ph = s * 0.42;
   const px = cx - pw * 0.5;
   const py = cy - ph * 0.5;
 
@@ -119,8 +120,8 @@ function drawPlate(
   if (s < PLATE_GLYPH_MIN_SCALE || !name) return;
 
   const label = name.toUpperCase();
-  // Fit 3×5 glyphs + gaps inside the plate; prefer unit 2 at player scale (~28).
-  const unit = Math.max(1, Math.min(2, ((pw - 2) / (label.length * 4 - 1)) | 0));
+  // Unit 3 at player/near scale (~28) so 4-letter names stay readable on 320×200.
+  const unit = s >= 22 ? 3 : s >= 14 ? 2 : 1;
   const gw = unit * 3;
   const gh = unit * 5;
   const gap = unit;
@@ -133,15 +134,15 @@ function drawPlate(
   }
 }
 
-/** Tiny 3×5 uppercase glyphs (A–Z) for name plates — Atari-chunky. */
+/** Tiny 3×5 uppercase glyphs for name plates — Atari-chunky. */
 const GLYPHS: Record<string, number[]> = {
   // rows as 3-bit masks, MSB = left
-  F: [0b111, 0b100, 0b111, 0b100, 0b100],
-  I: [0b111, 0b010, 0b010, 0b010, 0b111],
+  A: [0b010, 0b101, 0b111, 0b101, 0b101],
+  H: [0b101, 0b101, 0b111, 0b101, 0b101],
+  N: [0b101, 0b111, 0b111, 0b101, 0b101],
   O: [0b111, 0b101, 0b101, 0b101, 0b111],
-  R: [0b110, 0b101, 0b110, 0b101, 0b101],
+  S: [0b111, 0b100, 0b111, 0b001, 0b111],
   T: [0b111, 0b010, 0b010, 0b010, 0b010],
-  Z: [0b111, 0b001, 0b010, 0b100, 0b111],
 };
 
 function drawGlyph(

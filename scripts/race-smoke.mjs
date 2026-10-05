@@ -10,17 +10,23 @@ const browser = await chromium.launch({
 const page = await browser.newPage();
 await page.goto(url, { waitUntil: "networkidle" });
 await page.waitForFunction(() => window.__gulasch != null);
+const contextName = await page.$eval("#game-canvas", (canvas) => {
+  const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+  return gl?.constructor.name ?? null;
+});
+if (!contextName) {
+  console.error("FAIL: expected a WebGL canvas");
+  process.exit(1);
+}
 
 async function waitResult() {
-  // Pass null arg so options aren't swallowed as pageFunction arg (PW default timeout 30s).
-  // ~5.5× track: idle lose ~2.5–3 min; timeout must exceed worst case.
   const handle = await page.waitForFunction(
     () => {
       const s = window.__gulasch.getDebugSnapshot();
       return s.phase === "result" ? s : null;
     },
     null,
-    { timeout: 360000 },
+    { timeout: 60000 },
   );
   return handle.jsonValue();
 }
@@ -45,9 +51,8 @@ if (soloSnap.outcome !== "lose") {
   console.error("FAIL: rival solo should lose for player");
   process.exit(1);
 }
-// ~5.5× prior ~30s idle lose → floor well below expected (~150–180s).
-if (soloSnap.elapsed < 90) {
-  console.error("FAIL: rival solo finished too fast", soloSnap.elapsed);
+if (soloSnap.elapsed < 15) {
+  console.error("FAIL: rival solo finished implausibly early", soloSnap.elapsed);
   process.exit(1);
 }
 if (raceSnap.outcome !== "win") {
@@ -76,8 +81,23 @@ if (raceSnap.playerZ < raceSnap.finishZ) {
   console.error("FAIL: win without reaching finishZ", raceSnap);
   process.exit(1);
 }
-if (soloSnap.rivalZ < soloSnap.finishZ) {
-  console.error("FAIL: lose without rival reaching finishZ", soloSnap);
+if (!soloSnap.racers.some((racer) => racer.name !== "OTTO" && racer.finished)) {
+  console.error("FAIL: lose without a rival reaching finishZ", soloSnap);
   process.exit(1);
 }
-console.log("OK");
+if (raceSnap.racers.length !== 3 || new Set(raceSnap.racers.map((racer) => racer.name)).size !== 3) {
+  console.error("FAIL: expected OTTO, HANS and FRITZ", raceSnap.racers);
+  process.exit(1);
+}
+if (!(raceSnap.cargo >= 0 && raceSnap.cargo <= 100 && raceSnap.rank >= 1 && raceSnap.rank <= 3)) {
+  console.error("FAIL: invalid cargo/rank snapshot", raceSnap);
+  process.exit(1);
+}
+if (raceSnap.drawCalls > 100 || raceSnap.triangles > 50000) {
+  console.error("FAIL: scene exceeds approved render budgets", {
+    drawCalls: raceSnap.drawCalls,
+    triangles: raceSnap.triangles,
+  });
+  process.exit(1);
+}
+console.log("OK", { contextName });

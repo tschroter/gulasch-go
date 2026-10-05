@@ -70,12 +70,12 @@ export class RaceRenderer {
       .copy(this.pose.position)
       .addScaledVector(this.pose.tangent, -9.7)
       .addScaledVector(this.pose.right, player.lateral * 0.72 + steerLean * 0.35);
-    this.desiredCamera.y += 6.2;
+    this.desiredCamera.y += 8.6;
     this.desiredTarget
       .copy(this.pose.position)
       .addScaledVector(this.pose.tangent, 9)
       .addScaledVector(this.pose.right, player.lateral * 0.25);
-    this.desiredTarget.y += 2.4;
+    this.desiredTarget.y += 2.7;
 
     if (!this.cameraReady) {
       this.camera.position.copy(this.desiredCamera);

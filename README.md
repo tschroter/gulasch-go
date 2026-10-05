@@ -1,6 +1,6 @@
 # GulaschGo
 
-Browser race game with **2D Atari-era** optics (pseudo-3D / Pole Position–style). First playable slice: **game-basis**.
+Browser delivery race with low-poly **PS1-style Three.js/WebGL** visuals.
 
 ## Run
 
@@ -22,9 +22,12 @@ Open the URL Vite prints (default `http://localhost:5173`).
 
 ## Slice
 
-Long curved-track delivery race (~5.5× early game-basis length) vs one same-size rival, Canvas 2D low-res nearest upscale, bilingual (DE/EN) finish stub.
+One winding foggy mountain delivery route. Drive OTTO against the same-scale HANS and
+FRITZ box trucks. The Three.js scene renders at 320×180 and nearest-upscales behind a
+full-resolution DOM HUD; leaving the shoulder slowly lowers cargo condition.
 
-**Feel check:** steering lightness is meant for a **human local** playtest (`npm run dev`) — automated smoke only checks win/lose wiring.
+**Feel check:** steering, camera, composition, and truck readability are intended for a
+**human local** playtest (`npm run dev`). Automated smoke checks race and WebGL wiring.
 
 ```bash
 npm run build        # typecheck + production bundle

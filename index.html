@@ -3,14 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GulaschGo — game-basis</title>
+    <title>GulaschGo — PS1 Delivery Race</title>
   </head>
   <body>
     <div id="app">
       <canvas id="game-canvas"></canvas>
-      <div id="hud">
-        <div class="brand">GulaschGo</div>
-        <div class="hint">WASD · R restart / Neustart</div>
+      <div id="hud" aria-label="Race status">
+        <div class="hud-stack hud-top-left">
+          <section class="hud-box time-box">
+            <span class="hud-label">LIEFERZEIT</span>
+            <span class="hud-sub">(DELIVERY TIME)</span>
+            <strong id="hud-time">00:00.0</strong>
+          </section>
+          <section class="hud-box place-box">
+            <span class="trophy" aria-hidden="true">🏆</span>
+            <strong id="hud-position">3/3</strong>
+          </section>
+        </div>
+        <div class="hud-box cargo-box">
+          <span class="hud-label">GULASCH-LADUNG</span>
+          <span class="hud-sub">(CARGO)</span>
+          <div>
+            <strong id="hud-cargo">100%</strong>
+            <span id="hud-cargo-state">STABIL</span>
+          </div>
+        </div>
+        <div class="hud-box speed-box">
+          <strong id="hud-speed">000 KM/H</strong>
+        </div>
+        <div class="controls-hint">WASD · R NEUSTART</div>
       </div>
       <div id="result" class="hidden" aria-live="polite">
         <div class="result-panel">

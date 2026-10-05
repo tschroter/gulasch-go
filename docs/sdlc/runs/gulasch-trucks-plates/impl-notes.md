@@ -3,7 +3,7 @@
 - **Plan:** `docs/runs/gulasch-trucks-plates/plan.md` (approved 2026-10-05 — name-only Kennzeichen; both-lite cargo; base PR #4 tip)
 - **Date:** 2026-10-05
 - **Branch:** `cursor/gulasch-trucks-plates-f909` (from `cursor/rival-scale-long-track-6621` @ `7acc79f`)
-- **PR:** _(filled after draft open)_
+- **PR:** https://github.com/tschroter/gulasch-go/pull/5
 
 ## Summary
 

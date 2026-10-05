@@ -75,17 +75,17 @@ function cargoTexture(identity: TruckIdentity): THREE.CanvasTexture {
 }
 
 function plateTexture(name: TruckIdentity["name"]): THREE.CanvasTexture {
-  return canvasTexture(64, 20, (ctx) => {
+  return canvasTexture(96, 28, (ctx) => {
     ctx.fillStyle = "#e8e1ca";
-    ctx.fillRect(0, 0, 64, 20);
+    ctx.fillRect(0, 0, 96, 28);
     ctx.strokeStyle = "#171411";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(1, 1, 62, 18);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 92, 24);
     ctx.fillStyle = "#171411";
-    ctx.font = "900 14px monospace";
+    ctx.font = "900 21px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(name, 32, 11);
+    ctx.fillText(name, 48, 15);
   });
 }
 
@@ -130,18 +130,18 @@ export function createTruck(identity: TruckIdentity): THREE.Group {
   truck.add(doorLine);
 
   const cargoPanel = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.45, 3.45),
+    new THREE.PlaneGeometry(3.45, 3.15),
     new THREE.MeshBasicMaterial({ map: cargoTexture(identity), transparent: false }),
   );
-  cargoPanel.position.set(0, 3.45, -2.93);
+  cargoPanel.position.set(0, 3.7, -2.93);
   cargoPanel.rotation.y = Math.PI;
   truck.add(cargoPanel);
 
   const namePlate = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.2, 0.69),
+    new THREE.PlaneGeometry(3, 0.82),
     new THREE.MeshBasicMaterial({ map: plateTexture(identity.name), transparent: false }),
   );
-  namePlate.position.set(0, 1.03, -3.28);
+  namePlate.position.set(0, 1.62, -3.3);
   namePlate.rotation.y = Math.PI;
   truck.add(namePlate);
 

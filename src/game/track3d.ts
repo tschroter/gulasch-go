@@ -66,13 +66,69 @@ function ribbonGeometry(width: number, yOffset: number, segments = 220): THREE.B
     }
     if (i < segments) {
       const j = i * 2;
-      indices.push(j, j + 2, j + 1, j + 1, j + 2, j + 3);
+      // Vertex order follows the screen-right basis; keep road faces pointing up.
+      indices.push(j, j + 1, j + 2, j + 1, j + 3, j + 2);
     }
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function terrainGeometry(): THREE.BufferGeometry {
+  const columns = 48;
+  const rows = 112;
+  const minX = -150;
+  const maxX = 170;
+  const minZ = -40;
+  const maxZ = 710;
+  const routeSamples = Array.from({ length: 181 }, (_, index) =>
+    ROUTE.getPointAt(index / 180),
+  );
+  const positions: number[] = [];
+  const indices: number[] = [];
+
+  for (let row = 0; row <= rows; row++) {
+    const z = THREE.MathUtils.lerp(minZ, maxZ, row / rows);
+    for (let column = 0; column <= columns; column++) {
+      const x = THREE.MathUtils.lerp(minX, maxX, column / columns);
+      let nearest = routeSamples[0];
+      let nearestDistanceSq = Number.POSITIVE_INFINITY;
+      for (const sample of routeSamples) {
+        const dx = x - sample.x;
+        const dz = z - sample.z;
+        const distanceSq = dx * dx + dz * dz;
+        if (distanceSq < nearestDistanceSq) {
+          nearestDistanceSq = distanceSq;
+          nearest = sample;
+        }
+      }
+      const distance = Math.sqrt(nearestDistanceSq);
+      const awayFromRoad = THREE.MathUtils.smoothstep(distance, 10, 70);
+      const undulation =
+        (Math.sin(x * 0.075) + Math.cos(z * 0.045) * 0.7) * 1.4 * awayFromRoad;
+      const y = nearest.y - 0.42 - Math.min(distance * 0.11, 16) + undulation;
+      positions.push(x, y, z);
+    }
+  }
+
+  const stride = columns + 1;
+  for (let row = 0; row < rows; row++) {
+    for (let column = 0; column < columns; column++) {
+      const a = row * stride + column;
+      const b = a + 1;
+      const c = a + stride;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return geometry;
@@ -225,13 +281,12 @@ export function createTrack(): THREE.Group {
   const group = new THREE.Group();
   group.name = "mountain-delivery-route";
 
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(1200, 1200, 1, 1),
-    new THREE.MeshLambertMaterial({ color: 0x486b35 }),
+  const terrain = new THREE.Mesh(
+    terrainGeometry(),
+    new THREE.MeshLambertMaterial({ color: 0x486b35, flatShading: true }),
   );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set(0, -0.7, 300);
-  group.add(ground);
+  terrain.name = "route-following-terrain";
+  group.add(terrain);
 
   const shoulder = new THREE.Mesh(
     ribbonGeometry(SHOULDER_WIDTH, -0.04),

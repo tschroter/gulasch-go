@@ -20,6 +20,7 @@ export type DebugSnapshot = {
   playerZ: number;
   rivalZ: number;
   playerX: number;
+  playerScreenX: number;
   speed: number;
   finishZ: number;
   totalLength: number;
@@ -103,6 +104,7 @@ export class Game {
       playerZ: player.distance,
       rivalZ: hans.distance,
       playerX: player.lateral,
+      playerScreenX: this.view.playerScreenX,
       speed: player.speed,
       finishZ: FINISH_DISTANCE,
       totalLength: ROUTE_LENGTH,

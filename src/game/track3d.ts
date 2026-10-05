@@ -39,7 +39,8 @@ export function sampleTrack(distance: number, target?: TrackPose): TrackPose {
   const right = target?.right ?? new THREE.Vector3();
   ROUTE.getPointAt(t, position);
   ROUTE.getTangentAt(t, tangent).normalize();
-  right.crossVectors(UP, tangent).normalize();
+  // The chase camera looks along +forward; forward × up is its screen-right axis.
+  right.crossVectors(tangent, UP).normalize();
   return { position, tangent, right };
 }
 

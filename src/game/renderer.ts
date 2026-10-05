@@ -23,6 +23,7 @@ export class RaceRenderer {
   private readonly desiredCamera = new THREE.Vector3();
   private readonly desiredTarget = new THREE.Vector3();
   private readonly cameraTarget = new THREE.Vector3();
+  private readonly projectedPlayer = new THREE.Vector3();
   private cameraReady = false;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -100,6 +101,11 @@ export class RaceRenderer {
 
   get triangles(): number {
     return this.renderer.info.render.triangles;
+  }
+
+  get playerScreenX(): number {
+    this.projectedPlayer.copy(this.trucks[0].position).project(this.camera);
+    return (this.projectedPlayer.x + 1) * 0.5;
   }
 
   dispose(): void {

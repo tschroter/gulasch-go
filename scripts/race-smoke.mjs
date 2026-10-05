@@ -31,6 +31,46 @@ async function waitResult() {
   return handle.jsonValue();
 }
 
+// --- Rear-chase steering direction ---
+await page.keyboard.press("r");
+await page.waitForTimeout(200);
+const steeringCenter = await page.evaluate(() => window.__gulasch.getDebugSnapshot());
+await page.keyboard.down("a");
+await page.waitForTimeout(650);
+await page.keyboard.up("a");
+const steeringLeft = await page.evaluate(() => window.__gulasch.getDebugSnapshot());
+
+await page.keyboard.press("r");
+await page.waitForTimeout(200);
+await page.keyboard.down("d");
+await page.waitForTimeout(650);
+await page.keyboard.up("d");
+const steeringRight = await page.evaluate(() => window.__gulasch.getDebugSnapshot());
+console.log("steering", {
+  center: steeringCenter.playerScreenX,
+  left: steeringLeft.playerScreenX,
+  right: steeringRight.playerScreenX,
+});
+
+if (
+  !(steeringLeft.playerX < 0 && steeringLeft.playerScreenX < steeringCenter.playerScreenX - 0.005)
+) {
+  console.error("FAIL: A must move OTTO left in chase-camera screen space", {
+    steeringCenter,
+    steeringLeft,
+  });
+  process.exit(1);
+}
+if (
+  !(steeringRight.playerX > 0 && steeringRight.playerScreenX > steeringCenter.playerScreenX + 0.005)
+) {
+  console.error("FAIL: D must move OTTO right in chase-camera screen space", {
+    steeringCenter,
+    steeringRight,
+  });
+  process.exit(1);
+}
+
 // --- Rival solo ---
 await page.keyboard.press("r");
 await page.waitForTimeout(200);

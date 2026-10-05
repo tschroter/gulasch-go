@@ -49,8 +49,8 @@ export class Game {
   private readonly view: RaceRenderer;
   private readonly racers: RacerState[] = [
     { name: "OTTO", distance: 0, lateral: 0, speed: 0, finished: false },
-    { name: "HANS", distance: 46, lateral: -1.55, speed: 23.4, finished: false },
-    { name: "FRITZ", distance: 72, lateral: 1.55, speed: 22.2, finished: false },
+    { name: "HANS", distance: 18, lateral: -1.8, speed: 23.4, finished: false },
+    { name: "FRITZ", distance: 34, lateral: 1.8, speed: 22.2, finished: false },
   ];
   private phase: "racing" | "result" = "racing";
   private outcome: RaceOutcome | null = null;
@@ -129,14 +129,14 @@ export class Game {
       finished: false,
     });
     Object.assign(this.racers[1], {
-      distance: 46,
-      lateral: -1.55,
+      distance: 18,
+      lateral: -1.8,
       speed: 23.4,
       finished: false,
     });
     Object.assign(this.racers[2], {
-      distance: 72,
-      lateral: 1.55,
+      distance: 34,
+      lateral: 1.8,
       speed: 22.2,
       finished: false,
     });
@@ -186,8 +186,8 @@ export class Game {
     const fritz = this.racers[2];
     hans.distance += hans.speed * dt;
     fritz.distance += fritz.speed * dt;
-    hans.lateral = -1.55 + Math.sin(hans.distance * 0.025) * 0.32;
-    fritz.lateral = 1.55 + Math.sin(fritz.distance * 0.021 + 1.7) * 0.3;
+    hans.lateral = -1.8 + Math.sin(hans.distance * 0.025) * 0.32;
+    fritz.lateral = 1.8 + Math.sin(fritz.distance * 0.021 + 1.7) * 0.3;
 
     this.checkFinish();
     this.updateHud();

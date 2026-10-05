@@ -1,5 +1,6 @@
+import type { DecalAtlasDebug } from "./decalAtlas";
 import { Input } from "./input";
-import { RaceRenderer } from "./renderer";
+import { RaceRenderer, type DecalFixtureKind, type DecalMetrics } from "./renderer";
 import { FINISH_DISTANCE, ROAD_WIDTH, ROUTE_LENGTH, SHOULDER_WIDTH } from "./track3d";
 import { RaceUI, type RaceOutcome } from "./ui";
 
@@ -62,6 +63,7 @@ export class Game {
   private steerLean = 0;
   private frameMs = 16;
   private readonly frameSamples: number[] = [];
+  private fixtureHold = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.view = new RaceRenderer(canvas);
@@ -88,6 +90,28 @@ export class Game {
     cancelAnimationFrame(this.raf);
     this.input.dispose();
     this.view.dispose();
+  }
+
+  applyDecalFixture(kind: DecalFixtureKind): DecalMetrics {
+    this.fixtureHold = true;
+    this.phase = "racing";
+    this.outcome = null;
+    this.ui.hide();
+    const metrics = this.view.applyDecalFixture(kind, this.racers);
+    this.updateHud();
+    return metrics;
+  }
+
+  getDecalDebug(): DecalAtlasDebug {
+    return this.view.getDecalDebug();
+  }
+
+  getDecalAtlasDataURL(): string | null {
+    return this.view.getDecalAtlasDataURL();
+  }
+
+  getDecalMetrics(): DecalMetrics {
+    return this.view.measureDecals();
   }
 
   getDebugSnapshot(): DebugSnapshot {
@@ -147,6 +171,7 @@ export class Game {
     this.elapsed = 0;
     this.cargo = 100;
     this.steerLean = 0;
+    this.fixtureHold = false;
     this.view.resetCamera();
     this.ui.hide();
     this.updateHud();
@@ -155,6 +180,10 @@ export class Game {
   private update(dt: number): void {
     if (this.input.consumeRestart()) {
       this.resetRace();
+      return;
+    }
+    if (this.fixtureHold) {
+      this.view.render(this.racers, 0, dt);
       return;
     }
     if (this.phase === "result") return;

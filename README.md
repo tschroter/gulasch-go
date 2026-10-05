@@ -32,6 +32,7 @@ full-resolution DOM HUD; leaving the shoulder slowly lowers cargo condition.
 ```bash
 npm run build        # typecheck + production bundle
 npm run smoke:race   # requires `npm run dev` already running
+npm run smoke:decals # shared atlas filters/UVs + deterministic truck screenshots
 ```
 
 Process docs: `docs/sdlc/`.

@@ -148,7 +148,7 @@ body,
 
 .speed-box {
   left: 50%;
-  bottom: clamp(10px, 1.8vw, 28px);
+  bottom: clamp(4px, 0.9vw, 12px);
   transform: translateX(-50%);
   min-width: clamp(150px, 18vw, 270px);
   text-align: center;

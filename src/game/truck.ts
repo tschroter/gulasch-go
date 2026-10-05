@@ -1,4 +1,11 @@
 import * as THREE from "three";
+import {
+  applyAtlasUvs,
+  CARGO_PANEL_SIZE,
+  NAME_PLATE_SIZE,
+  type AtlasCell,
+  type AtlasCellId,
+} from "./decalAtlas";
 
 export type TruckIdentity = {
   name: "OTTO" | "HANS" | "FRITZ";
@@ -13,81 +20,10 @@ export const TRUCKS: readonly TruckIdentity[] = [
   { name: "FRITZ", box: 0x365c86, lower: 0x24364f, accent: 0xf0b848 },
 ];
 
-function canvasTexture(
-  width: number,
-  height: number,
-  draw: (ctx: CanvasRenderingContext2D) => void,
-): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Texture canvas unavailable");
-  draw(ctx);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.magFilter = THREE.NearestFilter;
-  texture.minFilter = THREE.NearestFilter;
-  texture.generateMipmaps = false;
-  return texture;
-}
-
-function cargoTexture(identity: TruckIdentity): THREE.CanvasTexture {
-  return canvasTexture(128, 128, (ctx) => {
-    ctx.fillStyle = `#${identity.box.toString(16).padStart(6, "0")}`;
-    ctx.fillRect(0, 0, 128, 128);
-    ctx.strokeStyle = "#241b16";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(3, 3, 122, 122);
-
-    ctx.fillStyle = "#2a201b";
-    ctx.beginPath();
-    ctx.ellipse(64, 60, 28, 13, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(40, 58, 48, 25);
-    ctx.fillStyle = "#bb3825";
-    ctx.beginPath();
-    ctx.ellipse(64, 58, 23, 9, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#f1a13a";
-    ctx.fillRect(48, 54, 6, 5);
-    ctx.fillRect(67, 58, 7, 5);
-    ctx.fillRect(78, 53, 5, 5);
-
-    ctx.strokeStyle = "#f3eee0";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    for (const x of [51, 77]) {
-      ctx.beginPath();
-      ctx.moveTo(x, 47);
-      ctx.quadraticCurveTo(x - 9, 34, x + 2, 22);
-      ctx.stroke();
-    }
-
-    ctx.font = "900 27px Arial Black, sans-serif";
-    ctx.textAlign = "center";
-    ctx.lineWidth = 7;
-    ctx.strokeStyle = "#1c1714";
-    ctx.strokeText("GULASCH", 64, 110);
-    ctx.fillStyle = "#efb733";
-    ctx.fillText("GULASCH", 64, 110);
-  });
-}
-
-function plateTexture(name: TruckIdentity["name"]): THREE.CanvasTexture {
-  return canvasTexture(96, 28, (ctx) => {
-    ctx.fillStyle = "#e8e1ca";
-    ctx.fillRect(0, 0, 96, 28);
-    ctx.strokeStyle = "#171411";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, 92, 24);
-    ctx.fillStyle = "#171411";
-    ctx.font = "900 21px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(name, 48, 15);
-  });
-}
+export type TruckDecalMaps = {
+  texture: THREE.Texture;
+  cells: Record<AtlasCellId, AtlasCell>;
+};
 
 function box(
   width: number,
@@ -101,7 +37,36 @@ function box(
   );
 }
 
-export function createTruck(identity: TruckIdentity): THREE.Group {
+function decalMaterial(map: THREE.Texture, transparent: boolean): THREE.MeshBasicMaterial {
+  return new THREE.MeshBasicMaterial({
+    map,
+    transparent,
+    depthWrite: true,
+    side: THREE.BackSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
+  });
+}
+
+function decalPlane(
+  width: number,
+  height: number,
+  map: THREE.Texture,
+  cell: AtlasCell,
+  name: string,
+  transparent: boolean,
+): THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> {
+  const geometry = new THREE.PlaneGeometry(width, height);
+  applyAtlasUvs(geometry, cell, true);
+  const mesh = new THREE.Mesh(geometry, decalMaterial(map, transparent));
+  mesh.name = name;
+  mesh.userData.cellId = cell.id;
+  mesh.userData.decalString = cell.id === "cargo" ? "GULASCH" : cell.id;
+  return mesh;
+}
+
+export function createTruck(identity: TruckIdentity, atlas: TruckDecalMaps): THREE.Group {
   const truck = new THREE.Group();
   truck.name = identity.name;
 
@@ -126,23 +91,29 @@ export function createTruck(identity: TruckIdentity): THREE.Group {
   truck.add(bumper);
 
   const doorLine = box(0.07, 4.2, 0.08, 0x766f60);
-  doorLine.position.set(0, 3.3, -2.94);
+  doorLine.position.set(0, 3.3, -2.905);
   truck.add(doorLine);
 
-  const cargoPanel = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.45, 3.15),
-    new THREE.MeshBasicMaterial({ map: cargoTexture(identity), transparent: false }),
+  const cargoPanel = decalPlane(
+    CARGO_PANEL_SIZE.width,
+    CARGO_PANEL_SIZE.height,
+    atlas.texture,
+    atlas.cells.cargo,
+    "cargoPanel",
+    true,
   );
-  cargoPanel.position.set(0, 3.7, -2.93);
-  cargoPanel.rotation.y = Math.PI;
+  cargoPanel.position.set(0, 4.02, -2.94);
   truck.add(cargoPanel);
 
-  const namePlate = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.8, 0.62),
-    new THREE.MeshBasicMaterial({ map: plateTexture(identity.name), transparent: false }),
+  const namePlate = decalPlane(
+    NAME_PLATE_SIZE.width,
+    NAME_PLATE_SIZE.height,
+    atlas.texture,
+    atlas.cells[identity.name],
+    "namePlate",
+    false,
   );
-  namePlate.position.set(0, 5.38, -2.99);
-  namePlate.rotation.y = Math.PI;
+  namePlate.position.set(0, 2.9, -2.99);
   truck.add(namePlate);
 
   const wheelGeometry = new THREE.CylinderGeometry(0.72, 0.72, 0.52, 8);
